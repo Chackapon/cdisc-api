@@ -1,9 +1,6 @@
 // DEV SETTINGS - DON'T CHANGE, UNLESS YOU KNOW WHAT YOU'RE DOING
-export const NEST_BLOCK = "tree_nests:nest";
-export const LOOT_TABLE = "tree_nests/nest";
-export const INTERACT_ITEM = "minecraft:brush";
-export const DEFAULT_ITEM = "minecraft:stick";
-export const MOD_NAMESPACE = "disc_api";
+export const MOD_NAMESPACE = "cdisc";
+export const RECORD_COMPONENT_NAME = "record";
 export const JUKEBOX_DATA_NAME = "jukebox_data";
 export const INHABITANT_STATE_NAME = "inhabitant";
 export const EMPTY_STATE_NAME = "is_empty";

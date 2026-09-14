@@ -1,4 +1,4 @@
-import { JUKEBOX_DATA_NAME, MOD_NAMESPACE, MAX_JUKEBOX_INTERACT_DISTANCE } from "./default_const";
+import { JUKEBOX_DATA_NAME, MOD_NAMESPACE, MAX_JUKEBOX_INTERACT_DISTANCE, RECORD_COMPONENT_NAME } from "./default_const";
 import { jukeboxRegistry, currentPlayingRegistry, discOwners } from "./registries";
 // Dynamic world data handler library
 import { saveWorldData } from './world_data_save.js';
@@ -7,7 +7,7 @@ import { playDisc, ejectDisc, playersStopSound, getSong, setDiscLore } from "./d
 import { getJukeboxID, isBlockJukebox } from "./jukebox_handler";
 export function registerRecordComponent() {
     system.beforeEvents.startup.subscribe(({ itemComponentRegistry }) => {
-        itemComponentRegistry.registerCustomComponent(`${MOD_NAMESPACE}:record`, {
+        itemComponentRegistry.registerCustomComponent(`${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`, {
             // Change disc side
             onUse(event, params) {
                 // Ignore if trying to interact with a jukebox
@@ -57,7 +57,7 @@ export function registerRecordComponent() {
             return;
         const jukeboxID = getJukeboxID(jukebox);
         if (!jukeboxRegistry.has(jukeboxID)) {
-            if (!disc_item?.hasComponent(`${MOD_NAMESPACE}:record`))
+            if (!disc_item?.hasComponent(`${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`))
                 return;
             const song = getSong(disc_item);
             // Remove item from player
@@ -99,6 +99,6 @@ export function registerRecordComponent() {
         // Save updated jukebox contents registry
         // saveJukeboxData();
         saveWorldData(`${MOD_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry);
-        player.sendMessage(`registry size: ${jukeboxRegistry.size}`);
+        // player.sendMessage(`registry size: ${jukeboxRegistry.size}`);
     });
 }

@@ -8,7 +8,7 @@ import { jukeboxRegistry, currentPlayingRegistry, } from "./registries";
 import { ItemStack, world, system } from "@minecraft/server";
 import { registerRecordComponent } from "./record_component";
 import { isMusicDisc, setDiscLore } from "./disc_handler";
-import { fromJukeboxID } from "./jukebox_handler";
+import { fromJukeboxID, getJukeboxID, isBlockJukebox } from "./jukebox_handler";
 world.afterEvents.worldLoad.subscribe((event) => {
     loadWorldData(`${MOD_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry);
 });
@@ -94,6 +94,23 @@ export function subscribeEventNoteParticles() {
     }, 20);
 }
 subscribeEventNoteParticles();
+// Spawn disc on block break
+world.beforeEvents.playerBreakBlock.subscribe((event) => {
+    const jukebox = event.block;
+    if (!isBlockJukebox(jukebox))
+        return;
+    const jukeboxID = getJukeboxID(jukebox);
+    const jukebox_entry = jukeboxRegistry.get(jukeboxID);
+    if (!jukebox_entry)
+        return;
+    const disc_item = new ItemStack(jukebox_entry["id"], 1);
+    disc_item.setDynamicProperty("song_id", jukebox_entry["song_id"] ?? 0);
+    system.run(() => {
+        jukebox.dimension.spawnItem(disc_item, jukebox.location);
+    });
+    jukeboxRegistry.delete(jukeboxID);
+    currentPlayingRegistry.delete(jukeboxID);
+});
 /// debug
 /*
 system.runInterval(() => {

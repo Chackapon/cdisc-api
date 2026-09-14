@@ -1,7 +1,7 @@
 import { ItemStack, world } from "@minecraft/server";
-import { MOD_NAMESPACE } from "./default_const";
+import { MOD_NAMESPACE, RECORD_COMPONENT_NAME } from "./default_const";
 export function isMusicDisc(item) {
-    return item?.getComponent(`${MOD_NAMESPACE}:record`) ?? false;
+    return item?.getComponent(`${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`) ?? false;
 }
 export function playersStopSound(player, sound_id) {
     for (const player of world.getAllPlayers()) {
@@ -102,7 +102,7 @@ export function ejectDisc(jukebox, disc_item_id, song_id) {
 }
 export function getSong(disc_item) {
     // Get item component
-    const properties = disc_item.getComponent(`${MOD_NAMESPACE}:record`)?.customComponentParameters.params;
+    const properties = disc_item.getComponent(`${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`)?.customComponentParameters.params;
     // if (!properties) return;
     // Get current side of the disc item
     let song_id = disc_item.getDynamicProperty("song_id");
