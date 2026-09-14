@@ -1,0 +1,33 @@
+{
+  "format_version": 2,
+  "header": {
+    "description": "Add vanilla-like custom music discs with just one custom item component!",
+    "name": "CDisc API [RP]",
+    "uuid": "23021d6a-7e58-4c4d-a5d6-bc3b165de012",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      40
+    ]
+  },
+  "modules": [
+    {
+      "description": "Resources module",
+      "type": "resources",
+      "uuid": "0d17f3df-f592-47dc-9798-bf7c29d730c4",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ],
+  "capabilities": [
+    "pbr"
+  ]
+}

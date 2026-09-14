@@ -1,0 +1,16 @@
+// DEV SETTINGS - DON'T CHANGE, UNLESS YOU KNOW WHAT YOU'RE DOING
+export const NEST_BLOCK = "tree_nests:nest";
+export const LOOT_TABLE = "tree_nests/nest";
+export const INTERACT_ITEM = "minecraft:brush";
+export const DEFAULT_ITEM = "minecraft:stick";
+export const MOD_NAMESPACE = "disc_api";
+export const JUKEBOX_DATA_NAME = "jukebox_data";
+export const INHABITANT_STATE_NAME = "inhabitant";
+export const EMPTY_STATE_NAME = "is_empty";
+export const JUKEBOX_BLOCK_TYPES = new Set([
+    "minecraft:jukebox"
+]);
+export const MAX_JUKEBOX_INTERACT_DISTANCE = 10;
+// USER SETTINGS
+export const DEFAULT_HOLLOW_CHANCE = 0.05; // Chance for a tree to generate with a nest
+export const DEFAULT_INHABITANT_CHANCE = 1; // Chance for a nest to contain mob

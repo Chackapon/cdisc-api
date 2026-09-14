@@ -1,0 +1,30 @@
+{
+  "format_version": "1.26.0",
+  "sound_definitions": {
+
+    "record.franz_ferdinand.eleanor#1": {
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "name": "sounds/records/franz_ferdinand.eleanor#1",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    
+    "record.franz_ferdinand.eleanor#2": {
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "name": "sounds/records/franz_ferdinand.eleanor#2",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    }
+    
+  }
+}
