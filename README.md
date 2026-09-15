@@ -126,4 +126,4 @@ The **title** and **author** fields for each entry can be anything, this example
 * When exchanging a vanilla disc with cdisc one (and vice-versa) the ejection and insertion happen at the same time
 * No item lore when item is crafted/taken from creative (you have to add the custom lore to the recipe itself)
 
-If you notice any other bugs, please let me know of them on the [GitHub Issues](https://github.com/Chackapon/tree_nests/issues) page!
+If you notice any other bugs, please let me know of them on the [GitHub Issues](https://github.com/Chackapon/cdisc-api/issues) page!
