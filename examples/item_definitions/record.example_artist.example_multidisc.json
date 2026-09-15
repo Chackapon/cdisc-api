@@ -1,0 +1,39 @@
+{
+	"format_version": "1.26.40",
+	"minecraft:item": {
+		"description": {
+			"identifier": "example_disc_pack:example_artist.example_multidisc",
+			"menu_category": {
+				"category": "items",
+				"group": "minecraft:itemGroup.name.record"
+			}
+		},
+		"components": {
+			"minecraft:icon": "record.example_artist.example_multidisc",
+
+			"minecraft:display_name": { "value": "Music Disc" },
+			"minecraft:rarity": "rare",
+			"minecraft:hover_text_color": "yellow",
+
+			"minecraft:max_stack_size": 1,
+			"minecraft:allow_off_hand": true,
+			"minecraft:hand_equipped": false,
+
+			"cdisc:record": {
+				"songs": [ "side_a", "side_b" ],
+				"side_a": {
+					"sound": "record.example_artist.example_multidisc_part1",
+					"title": "Part 1",
+					"author": "Example Artist",
+					"duration": 67
+				},
+				"side_b": {
+					"sound": "record.example_artist.example_multidisc_part2",
+					"title": "Part 2",
+					"author": "Example Artist",
+					"duration": 69
+				}
+			}
+		}
+	}
+}
