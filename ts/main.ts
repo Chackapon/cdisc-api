@@ -3,8 +3,7 @@
 // Important constants
 import {
 	ADDON_NAMESPACE,
-	JUKEBOX_DATA_NAME,
-	JUKEBOX_BLOCK_TYPES
+	JUKEBOX_DATA_NAME
 } from "./default_const";
 
 // Dynamic world data handler library
@@ -47,8 +46,9 @@ class DiscStack {
 }
 
 
-world.afterEvents.worldLoad.subscribe((event) => {
+world.afterEvents.worldLoad.subscribe( () => {
 	loadWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
+	// CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` );
 });
 registerRecordComponent();
 
@@ -62,7 +62,8 @@ import {
 } from "./settings"
 const settings = new SettingsWrapper();
 settings.header( "Gameplay" )
-settings.textField( "cdisc:jukebox_reach", "Use distance for jukeboxes" )
+settings.toggle( `${ADDON_NAMESPACE}:consume_creative`, "Consume music discs even in creative mode")
+settings.textField( `${ADDON_NAMESPACE}:jukebox_reach`, "Use distance for jukeboxes" )
 
 
 

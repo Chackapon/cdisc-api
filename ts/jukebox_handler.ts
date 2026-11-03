@@ -4,7 +4,8 @@ import {
 } from "@minecraft/server";
 
 import {
-    JUKEBOX_BLOCK_TYPES
+    ADDON_NAMESPACE,
+    JUKEBOX_COMPONENT_NAME,
 } from "./default_const";
 
 
@@ -16,7 +17,9 @@ export function getJukeboxID( jukebox: Block ) {
 
 export function isBlockJukebox( block: Block | undefined ) {
     if ( !block ) return false;
-    return JUKEBOX_BLOCK_TYPES.has( block.typeId );
+
+    const cjukebox_component = block.getComponent(`${ADDON_NAMESPACE}:${JUKEBOX_COMPONENT_NAME}`)
+    return cjukebox_component ?? false;
 }
 
 export function fromJukeboxID( id: string ) {
