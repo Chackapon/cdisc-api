@@ -3,7 +3,7 @@ import {
     ADDON_NAMESPACE,
     MAX_JUKEBOX_INTERACT_DISTANCE,
 
-    RecordComponent, RECORD_COMPONENT_NAME
+    RecordComponent, RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME
 } from "./default_const";
 
 import {
@@ -14,6 +14,7 @@ import {
 
 // Dynamic world data handler library
 import {
+    loadWorldData,
     saveWorldData
 } from './world_data_save.js';
 
@@ -35,7 +36,7 @@ import {
 } from "./jukebox_handler"
 
 
-
+const CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` ) ?? DEFAULT_CREATIVE_CONSUME;
 
 export function registerRecordComponent() {
     system.beforeEvents.startup.subscribe( ({itemComponentRegistry}) => {
@@ -109,7 +110,7 @@ export function registerRecordComponent() {
             if ( !disc_item?.hasComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
             const song = getSong(disc_item);
             // Remove item from player
-            if ( player.getGameMode() !== GameMode.Creative ) {
+            if ( player.getGameMode() !== GameMode.Creative && CREATIVE_CONSUME ) {
                 const inventory = player.getComponent("minecraft:inventory");
                 inventory?.container?.setItem(player.selectedSlotIndex, undefined);
             }
@@ -153,7 +154,7 @@ export function registerRecordComponent() {
 
                 // Stop sound only if record is still playing
                 if ( currentPlayingRegistry.get(jukeboxID) ) {
-                    playersStopSound( player, jukeboxData["sound"] );
+                    playersStopSound( jukeboxData["sound"] );
                     currentPlayingRegistry.delete(jukeboxID);
                 }
 

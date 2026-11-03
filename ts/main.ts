@@ -48,7 +48,7 @@ class DiscStack {
 
 world.afterEvents.worldLoad.subscribe( () => {
 	loadWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
-	// CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` );
+
 });
 registerRecordComponent();
 

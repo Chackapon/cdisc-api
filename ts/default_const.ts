@@ -9,6 +9,7 @@ export const INHABITANT_STATE_NAME = "inhabitant"
 export const EMPTY_STATE_NAME = "is_empty"
 
 export const MAX_JUKEBOX_INTERACT_DISTANCE = 10;
+export const DEFAULT_CREATIVE_CONSUME = false;
 
 export type RecordSong = {
     sound: string;

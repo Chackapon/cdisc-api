@@ -11,7 +11,7 @@ export function isMusicDisc( item: ItemStack ) {
     return item?.getComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`) ?? false;
 }
 
-export function playersStopSound( player: Player, sound_id: string ) {
+export function playersStopSound( sound_id: string ) {
     for (const player of world.getAllPlayers()) {
         player.runCommand(`stopsound @a ${sound_id}`);
     }
@@ -48,7 +48,7 @@ function recordActionBar( player: Player, author: string, title: string ) {
     });
 
     /*
-    player.onScreenDisplay.setActionBar({ //todo: check how vanilla makes this in multiplayer
+    player.onScreenDisplay.setActionBar({ //todo: check how vanilla displays nowPlaying in multiplayer
         rawtext: [
             {
             translate: "discapi.nowPlaying",
