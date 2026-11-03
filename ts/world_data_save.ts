@@ -1,4 +1,3 @@
-const ADDON_NAME = "Tree Nests";
 /**
  * Functions that handle saving and loading of world dynamic properties
  */
@@ -35,43 +34,36 @@ export function saveWorldData( id: string, save_data: any ) {
  * @param id
  * @param destination Map|Set
  */
-export function loadWorldData( id: string, destination: any ) {
-
-	// Pre-load clean up
-	try {
-		destination.clear(); //TODO handle for non collections
-	} catch {
-		
-	}
+export function loadWorldData( id: string, destination?: any ) {
 
 	// Get dynamic property and check if it exists
 	const property = world.getDynamicProperty(id);
-	if (property) {
-		log(`Loading data from dyn. property with id=${id}`);
+	if ( !property ) {
+		warn(`No saved data found for id=${id}`);
+		return;
+	}
+
+	log(`Loading data from dyn. property with id=${id}`);
+
+	// If target is a collection
+	if (destination) {
+		// Pre-load clean up
+		destination.clear();
 
 		// Handle depending on collection type
 		if ( destination instanceof Set  ) {
 			const loaded_data = new Set(JSON.parse(property as string));
 			for (let entry of loaded_data) destination.add(entry);
 		}
-		
+
 		else if ( destination instanceof Map  ) {
 			const loaded_data = new Map(Object.entries(JSON.parse(property as string)));
 			for (const [key,value] of loaded_data) destination.set(key, value);
-		} 
-		
-		else {
-			//destination = property;
-			//console.log(typeof(property), property, typeof(destination), destination);
-			return property; // TODO handle this more elegantly
-
 		}
-		
 	}
 
-	// If no dynamic property with id found
-	else {
-		warn(`No saved data found for id=${id}`);
-	}
+	// If target is a simple variable
+	else return property;
+
+
 }
-
