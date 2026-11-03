@@ -3,7 +3,8 @@
  */
 
 import {
-   world,
+	Vector3,
+	world,
 } from "@minecraft/server";
 import { log, warn } from "./logger.js";
 
@@ -13,7 +14,7 @@ import { log, warn } from "./logger.js";
  * @param id
  * @param save_data
  */
-export function saveWorldData( id: string, save_data: any ) {
+export function saveWorldData( id: string, save_data: boolean | number | string | Vector3 | Map<any, any> | Set<any> ) {
 
 	// Handle depending on collection type
 	if ( save_data instanceof Set  ) {
@@ -34,7 +35,7 @@ export function saveWorldData( id: string, save_data: any ) {
  * @param id
  * @param destination Map|Set
  */
-export function loadWorldData( id: string, destination?: any ) {
+export function loadWorldData( id: string, destination?: Map<any, any> | Set<any> ) {
 
 	// Get dynamic property and check if it exists
 	const property = world.getDynamicProperty(id);
