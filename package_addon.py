@@ -34,9 +34,9 @@ def increment_manifest_pack_version( manifest: dict, target_ver: str) -> str:
     config_version = semver.Version.parse(target_ver)
 
     if current_version < config_version:
-        current_version = str(config_version) + "+build.1"
+        current_version = str(config_version) + "-build.1"
     else:
-        current_version = current_version.bump_build()
+        current_version = current_version.bump_prerelease(token="build")
 
     return str(current_version)
 

@@ -36,7 +36,7 @@ import {
 } from "./jukebox_handler"
 
 
-const CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` ) ?? DEFAULT_CREATIVE_CONSUME;
+
 
 export function registerRecordComponent() {
     system.beforeEvents.startup.subscribe( ({itemComponentRegistry}) => {
@@ -110,6 +110,7 @@ export function registerRecordComponent() {
             if ( !disc_item?.hasComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
             const song = getSong(disc_item);
             // Remove item from player
+            const CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` ) ?? DEFAULT_CREATIVE_CONSUME; // TODO move to special place for afterload
             if ( player.getGameMode() !== GameMode.Creative && CREATIVE_CONSUME ) {
                 const inventory = player.getComponent("minecraft:inventory");
                 inventory?.container?.setItem(player.selectedSlotIndex, undefined);
