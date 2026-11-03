@@ -103,7 +103,38 @@ export function subscribeEventSongDurationTicker() {
 		currentPlayingRegistry.forEach( (duration, jukeboxID) => {
 			if ( duration-1 <= 0 ) {
 				currentPlayingRegistry.delete(jukeboxID);
+
 				//TODO move to hopper if present
+				const from_id = fromJukeboxID(jukeboxID);
+				if (from_id) {
+					const under_juke_location = {
+						x: from_id.location.x,
+						y: from_id.location.y - 1,
+						z: from_id.location.z
+					}
+					const hopper_block = from_id.dimension.getBlock(under_juke_location);
+					if ( hopper_block?.typeId === "minecraft:hopper" ) {
+						console.log("Hopper found under a jukebox where a song ended")
+						const hopper_inv = hopper_block.getComponent("minecraft:inventory")
+						if ( hopper_inv?.container ) {
+							const container = hopper_inv.container;
+							console.log(`Hopper size: ${container.size}`);
+							console.log(`Empty slots: ${container.emptySlotsCount}`);
+
+							for ( let slot = 0; slot < container.size; slot ++ ) {
+								const item = container.getItem(slot);
+								if (item) {
+									console.log(`At slot ${slot}: ${item.typeId} x${item.amount}`);
+								}
+								else console.log(`At slot ${slot}: empty`);
+							}
+
+							//container.addItem(ItemStack)
+
+						}
+					}
+				}
+
 			}
 			else currentPlayingRegistry.set(jukeboxID, duration-1);
 		} );
