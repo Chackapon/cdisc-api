@@ -1,8 +1,8 @@
-// TAG DISC
+// CDISC
 
 // Important constants
 import {
-	MOD_NAMESPACE,
+	ADDON_NAMESPACE,
 	JUKEBOX_DATA_NAME,
 	JUKEBOX_BLOCK_TYPES
 } from "./default_const";
@@ -31,47 +31,51 @@ import {isMusicDisc, setDiscLore} from "./disc_handler";
 import {fromJukeboxID, getJukeboxID, isBlockJukebox} from "./jukebox_handler";
 
 
-world.afterEvents.worldLoad.subscribe((event) => {
-	loadWorldData( `${MOD_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
-});
-registerRecordComponent();
-
-//// bleh
-
-
-
-
 class DiscStack {
-	private item: ItemStack;
-	constructor(item_type: string) {
-		this.item = new ItemStack(item_type);
-		const disc_lang_key = "record." + this.item.typeId.split(":")[1] // refactor
-		this.item.setLore([{ rawtext: [
-			{ "text": "§r§7" },
-			{ translate: disc_lang_key }
-		]}]);
+	item: ItemStack;
+
+	constructor(item_type: string | ItemStack) {
+		if (item_type instanceof ItemStack) {
+			this.item = item_type;
+		}
+		else {
+			this.item = new ItemStack(item_type, 1);
+		}
+
+		setDiscLore( this.item )
 	}
 }
 
 
+world.afterEvents.worldLoad.subscribe((event) => {
+	loadWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
+});
+registerRecordComponent();
 
 
 
+//// bleh
 
-
+//@@@ Settings
+import {
+	SettingsWrapper
+} from "./settings"
+const settings = new SettingsWrapper();
+settings.header( "Gameplay" )
+settings.textField( "cdisc:jukebox_reach", "Use distance for jukeboxes" )
 
 
 
 // Add lore to dropped item
 export function subscribeEventItemEntityLore() {
 	world.afterEvents.entitySpawn.subscribe(({ entity }) => {
+
 		if (entity.typeId !== "minecraft:item") return;
 
-	   const itemComponent = entity.getComponent("minecraft:item");
+		const itemComponent = entity.getComponent("minecraft:item");
 		if (!itemComponent) return;
 
     	const oldItem = itemComponent.itemStack;
-
     	if (!isMusicDisc(oldItem)) return;
 
     	// Already has lore
@@ -90,31 +94,15 @@ export function subscribeEventItemEntityLore() {
 }
 subscribeEventItemEntityLore();
 
-// Add lore to inventory
-// world.afterEvents.playerInventoryItemChange.subscribe((event) => {
-//     const item = event.itemStack;
-//
-//     if (!item) return;
-//     if (!isMusicDisc(item)) return;
-//     if (item.getLore().length > 0) return;
-//
-//     setDiscLore(item);
-//
-// 	const inventory = event.player.getComponent("minecraft:inventory")?.container;
-// 	if (inventory) {
-// 		inventory.setItem(event.player.selectedSlotIndex, item);
-// 	}
-//
-// });
+
 
 // Tick all playing songs every second
 export function subscribeEventSongDurationTicker() {
 	system.runInterval(() => {
 		currentPlayingRegistry.forEach( (duration, jukeboxID) => {
 			if ( duration-1 <= 0 ) {
-				// console.log(jukeboxID, "has stopped playing");
 				currentPlayingRegistry.delete(jukeboxID);
-			
+				//TODO move to hopper if present
 			}
 			else currentPlayingRegistry.set(jukeboxID, duration-1);
 		} );

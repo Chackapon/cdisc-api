@@ -1,0 +1,29 @@
+{
+	"format_version": "1.26.40",
+	"minecraft:item": {
+		"description": {
+			"identifier": "record.cdisc.blank_record",
+			"menu_category": {
+				"category": "items"
+			}
+		},
+		"components": {
+			"minecraft:icon": "record.cdisc.blank_record",
+
+			"minecraft:display_name": { "value": "Music Disc" },
+			"minecraft:rarity": "rare",
+			"minecraft:hover_text_color": "yellow",
+
+			"minecraft:max_stack_size": 1,
+			"minecraft:allow_off_hand": true,
+			"minecraft:hand_equipped": false,
+
+			"cdisc:record": {
+				"sound": "crafter.fail",
+				"title": "Blank Disc",
+				"author": "No Music",
+				"duration": 0
+			}
+		}
+	}
+}

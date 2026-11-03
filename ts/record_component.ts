@@ -1,6 +1,6 @@
 import {
     JUKEBOX_DATA_NAME,
-    MOD_NAMESPACE,
+    ADDON_NAMESPACE,
     MAX_JUKEBOX_INTERACT_DISTANCE,
 
     RecordComponent, RECORD_COMPONENT_NAME
@@ -19,7 +19,6 @@ import {
 
 import {
     GameMode,
-    Player,
     system, world
 } from "@minecraft/server";
 
@@ -40,7 +39,7 @@ import {
 
 export function registerRecordComponent() {
     system.beforeEvents.startup.subscribe( ({itemComponentRegistry}) => {
-        itemComponentRegistry.registerCustomComponent(`${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`, {
+        itemComponentRegistry.registerCustomComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`, {
 
             // Change disc side
             onUse(event, params) {
@@ -107,7 +106,7 @@ export function registerRecordComponent() {
 
         if ( !jukeboxRegistry.has(jukeboxID) ) {
 
-            if ( !disc_item?.hasComponent(`${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
+            if ( !disc_item?.hasComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
             const song = getSong(disc_item);
             // Remove item from player
             if ( player.getGameMode() !== GameMode.Creative ) {
@@ -167,7 +166,7 @@ export function registerRecordComponent() {
 
         // Save updated jukebox contents registry
         // saveJukeboxData();
-        saveWorldData( `${MOD_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
+        saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
         // player.sendMessage(`registry size: ${jukeboxRegistry.size}`);
     });
 }

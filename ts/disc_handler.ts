@@ -1,15 +1,14 @@
-import {Block, ItemStack, Player, system, world} from "@minecraft/server";
-import {loadWorldData} from "./world_data_save";
+import {Block, ItemStack, Player, world} from "@minecraft/server";
 import {
 
-    MOD_NAMESPACE,
+    ADDON_NAMESPACE,
 
     RecordSong,
     RECORD_COMPONENT_NAME
 } from "./default_const";
 
 export function isMusicDisc( item: ItemStack ) {
-    return item?.getComponent(`${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`) ?? false;
+    return item?.getComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`) ?? false;
 }
 
 export function playersStopSound( player: Player, sound_id: string ) {
@@ -131,7 +130,7 @@ export function getSong( disc_item: ItemStack ) {
 
     // Get item component
     const properties: any = disc_item.getComponent(
-        `${MOD_NAMESPACE}:${RECORD_COMPONENT_NAME}`
+        `${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`
     )?.customComponentParameters.params;
     // if (!properties) return;
 
