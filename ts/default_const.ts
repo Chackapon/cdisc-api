@@ -18,6 +18,12 @@ export type RecordSong = {
     duration: number;
 };
 
+export type JukeboxEntry = {
+    "id": string
+    "song_id": number
+    "sound": string
+};
+
 export type RecordComponent = {
     audio: RecordSong[]; // TODO make accept single song
 }

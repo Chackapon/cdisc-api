@@ -7,7 +7,7 @@ import {
     RECORD_COMPONENT_NAME
 } from "./default_const";
 
-export function isMusicDisc( item: ItemStack ) {
+export function isMusicDisc( item: ItemStack | undefined ) {
     return item?.getComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`) ?? false;
 }
 
@@ -126,29 +126,35 @@ export function ejectDisc( jukebox: Block, disc_item_id: string, song_id: number
     jukebox.dimension.spawnItem( disc_item, spawn_location );
 }
 
-export function getSong( disc_item: ItemStack ) {
+
+export function getSong( disc_item: ItemStack ): RecordSong {
 
     // Get item component
     const properties: any = disc_item.getComponent(
         `${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`
     )?.customComponentParameters.params;
-    // if (!properties) return;
 
-    // Get current side of the disc item
-    let song_id = disc_item.getDynamicProperty("song_id");
 
-    if (typeof song_id !== "number") {
-        song_id = 0;
-        disc_item.setDynamicProperty("song_id", song_id);
+    // If it's a multi disc
+    const songs_list = properties["songs"];
+    if (songs_list && Array.isArray(songs_list)) {
+
+        if (songs_list.length > 1) {
+            // Get current side of the disc item
+            let song_id = disc_item.getDynamicProperty("song_id");
+            if (typeof song_id !== "number") {
+                song_id = 0;
+                disc_item.setDynamicProperty("song_id", song_id);
+            }
+
+            const song_key = properties["songs"][song_id];
+            return properties[song_key];
+        }
+        else return properties["songs"][0];
     }
 
-    const songs_list = properties["songs"];
-    let song_key;
-
-    if ( !songs_list || !Array.isArray(songs_list) || songs_list.length <= 1) {
+    // If it's a single disc
+    else {
         return properties;
     }
-    else song_key = properties["songs"][song_id];
-
-    return properties[song_key];
 }

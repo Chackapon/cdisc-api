@@ -1,7 +1,9 @@
+import {JukeboxEntry} from "./default_const";
+
 /**
  * Stores jukeboxes actively used by CDisc along with their disc item it, used disc side and sound name
  */
-export const jukeboxRegistry = new Map();
+export const jukeboxRegistry = new Map<string, JukeboxEntry>();
 
 /**
  * Stores actively playing jukeboxes with their playing duration

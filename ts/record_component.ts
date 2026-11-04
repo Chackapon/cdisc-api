@@ -3,7 +3,8 @@ import {
     ADDON_NAMESPACE,
     MAX_JUKEBOX_INTERACT_DISTANCE,
 
-    RecordComponent, RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME
+
+    RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME
 } from "./default_const";
 
 import {
@@ -20,7 +21,7 @@ import {
 
 import {
     Block,
-    GameMode, Player,
+    GameMode,
     system, world
 } from "@minecraft/server";
 
@@ -28,7 +29,7 @@ import {
     playDisc,
     ejectDisc,
     playersStopSound,
-    getSong, setDiscLore
+    getSong, setDiscLore, isMusicDisc
 } from "./disc_handler";
 
 import {
@@ -164,7 +165,10 @@ export function registerRecordComponent() {
 
             const player = event.player;
             const disc_item = event.itemStack;
+            if (!isMusicDisc(disc_item)) return;
+
             const jukebox = event.block;
+            if ( !isBlockJukebox(jukebox) ) return;
 
             if (playerInteractionCooldown.has(player.id)) {
                 return;
@@ -175,13 +179,13 @@ export function registerRecordComponent() {
                 }, 5);
             }
 
-            if ( !isBlockJukebox(jukebox) ) return;
+
             // console.log(`Is jukebox clicked: ${jukebox.typeId}, ${isBlockJukebox(jukebox)}`)
 
             const jukeboxID = getJukeboxID(jukebox);
 
 
-
+            // Jukebox doesn't have a CDisc yet
             if ( !jukeboxRegistry.has(getJukeboxID(jukebox)) ) {
 
                 if ( !disc_item?.hasComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
@@ -199,7 +203,7 @@ export function registerRecordComponent() {
                 // Insert disc into jukebox and play
                 jukeboxRegistry.set(jukeboxID, {
                     "id": disc_item.typeId,
-                    "song_id": disc_item.getDynamicProperty("song_id"),
+                    "song_id": disc_item.getDynamicProperty("song_id") as number,
                     "sound": song.sound
                 }); // TODO consider saving disc side as well
 
