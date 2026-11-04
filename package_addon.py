@@ -1,7 +1,4 @@
-import glob
 import json
-import os
-import pathlib
 import zipfile
 
 import semver
@@ -33,15 +30,20 @@ def increment_manifest_pack_version( manifest: dict, target_ver: str) -> str:
     current_version = semver.Version.parse(manifest['header']['version'])
     config_version = semver.Version.parse(target_ver)
 
-    if current_version < config_version:
+    if current_version.replace(prerelease=None).compare(config_version):
+        print(f"> Higher version requested in the config, changing from {current_version} to {str(config_version) + "-build.1"}")
         current_version = str(config_version) + "-build.1"
     else:
+        print(f"> Bumping build version from {current_version.prerelease} to {current_version.bump_prerelease(token="build").prerelease}")
         current_version = current_version.bump_prerelease(token="build")
 
     return str(current_version)
 
 
 def update_rp_manifest():
+
+    print("=== UPDATING RESOURCE MANIFEST ===")
+
     with open(rp_source / "manifest.json", "r") as rp_manifest_file:
         manifest = json.load(rp_manifest_file)
 
@@ -68,6 +70,8 @@ def update_rp_manifest():
 
 
 def update_bp_manifest():
+
+    print("=== UPDATING BEHAVIOR MANIFEST ===")
 
     with open(bp_source / "manifest.json", "r") as bp_manifest_file:
         manifest = json.load(bp_manifest_file)
