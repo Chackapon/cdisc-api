@@ -93,9 +93,22 @@ export function subscribeEventItemEntityLore() {
     	dimension.spawnItem(newItem, location);
 	});
 }
-subscribeEventItemEntityLore();
+// subscribeEventItemEntityLore();
 
+// Add lore on inventory change
+export function subscribeEventInventoryChangeLore() {
+	world.afterEvents.playerInventoryItemChange.subscribe((event)=> {
+		const disc_item = event.itemStack;
+		if (!disc_item || !isMusicDisc(disc_item)) return;
 
+		const inventory = event.player.getComponent("minecraft:inventory")?.container;
+		if (!inventory) return;
+
+		setDiscLore(disc_item);
+		inventory.setItem(event.slot, disc_item);
+	})
+}
+subscribeEventInventoryChangeLore();
 
 // Tick all playing songs every second
 export function subscribeEventSongDurationTicker() {
@@ -124,9 +137,12 @@ export function subscribeEventSongDurationTicker() {
 							// TODO handle full hoppers
 							// TODO rethink some of the code and registries
 							if(container.emptySlotsCount > 0) {
-								const item_id = jukeboxRegistry.get(jukeboxID)["id"];
+								const jukebox_entry = jukeboxRegistry.get(jukeboxID);
+								if (!jukebox_entry) return;
+
+								const item_id = jukebox_entry["id"];
 								const disc_item = new ItemStack(item_id, 1);
-								disc_item.setDynamicProperty("song_id", jukeboxRegistry.get(jukeboxID)["song_id"])
+								disc_item.setDynamicProperty("song_id", jukebox_entry["song_id"])
 								container.addItem(disc_item);
 
 								jukeboxRegistry.delete(jukeboxID);
