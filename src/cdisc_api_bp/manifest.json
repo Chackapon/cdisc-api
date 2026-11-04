@@ -2,9 +2,9 @@
     "format_version": 3,
     "header": {
         "description": "Add vanilla-like custom music discs with just one custom item component!",
-        "name": "CDisc API [BP v.1.2.6]",
+        "name": "CDisc API [BP v.1.2.7]",
         "uuid": "c4c3b4b2-7514-43c8-b3ce-668588dbac60",
-        "version": "1.2.6-build.33",
+        "version": "1.2.7-build.5",
         "min_engine_version": "1.26.40"
     },
     "modules": [
@@ -12,7 +12,7 @@
             "description": "Data module",
             "type": "data",
             "uuid": "632b68bc-dca9-4021-b025-03c8b96d32c4",
-            "version": "1.2.6-build.33"
+            "version": "1.2.7-build.5"
         },
         {
             "description": "Scripts module",
@@ -20,13 +20,13 @@
             "language": "javascript",
             "entry": "scripts/main.js",
             "uuid": "2782b18b-b2ab-44ad-a503-8d855cf9a3e1",
-            "version": "1.2.6-build.33"
+            "version": "1.2.7-build.5"
         }
     ],
     "dependencies": [
         {
             "uuid": "23021d6a-7e58-4c4d-a5d6-bc3b165de012",
-            "version": "1.2.4"
+            "version": "1.2.6"
         },
         {
             "module_name": "@minecraft/server",

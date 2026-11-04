@@ -37,7 +37,7 @@ import {
 } from "./jukebox_handler"
 
 
-
+const playerInteractionCooldown = new Set<string>;
 
 export function registerRecordComponent() {
     function handleJukboxEjection(jukebox: Block) {
@@ -166,8 +166,17 @@ export function registerRecordComponent() {
             const disc_item = event.itemStack;
             const jukebox = event.block;
 
+            if (playerInteractionCooldown.has(player.id)) {
+                return;
+            }else{
+                playerInteractionCooldown.add(player.id);
+                system.runTimeout(()=>{
+                    playerInteractionCooldown.delete(player.id);
+                }, 5);
+            }
+
             if ( !isBlockJukebox(jukebox) ) return;
-            console.log(`Is jukebox clicked: ${jukebox.typeId}, ${isBlockJukebox(jukebox)}`)
+            // console.log(`Is jukebox clicked: ${jukebox.typeId}, ${isBlockJukebox(jukebox)}`)
 
             const jukeboxID = getJukeboxID(jukebox);
 
@@ -179,9 +188,11 @@ export function registerRecordComponent() {
                 const song = getSong(disc_item);
                 // Remove item from player
                 const CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` ) ?? DEFAULT_CREATIVE_CONSUME; // TODO move to special place for afterload
-                if ( player.getGameMode() !== GameMode.Creative && CREATIVE_CONSUME ) {
+                if ( player.getGameMode() !== GameMode.Creative || CREATIVE_CONSUME ) {
                     const inventory = player.getComponent("minecraft:inventory");
-                    inventory?.container?.setItem(player.selectedSlotIndex, undefined);
+                    system.run(()=>{
+                        inventory?.container?.setItem(player.selectedSlotIndex, undefined);
+                    })
                 }
 
 
