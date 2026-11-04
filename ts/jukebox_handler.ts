@@ -20,8 +20,8 @@ export function isBlockJukebox( block: Block | undefined ) {
 
     const cjukebox_component = block.getComponent(`${ADDON_NAMESPACE}:${JUKEBOX_COMPONENT_NAME}`)
     const juke_cond = cjukebox_component ?? false;
-    console.log(juke_cond)
-    console.log(block.typeId)
+    // console.log(juke_cond)
+    // console.log(block.typeId)
     return juke_cond || block.typeId === "minecraft:jukebox";
 }
 
