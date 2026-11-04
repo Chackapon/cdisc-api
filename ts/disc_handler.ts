@@ -126,7 +126,11 @@ export function ejectDisc( jukebox: Block, disc_item_id: string, song_id: number
     jukebox.dimension.spawnItem( disc_item, spawn_location );
 }
 
-
+/**
+ *
+ * @param disc_item - a specific disc ItemStack
+ * @returns RecordSong - a song entry from the item definition
+ */
 export function getSong( disc_item: ItemStack ): RecordSong {
 
     // Get item component

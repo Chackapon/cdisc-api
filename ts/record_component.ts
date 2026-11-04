@@ -4,7 +4,7 @@ import {
     MAX_JUKEBOX_INTERACT_DISTANCE,
 
 
-    RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME
+    RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME,
 } from "./default_const";
 
 import {
@@ -71,31 +71,7 @@ export function registerRecordComponent() {
         itemComponentRegistry.registerCustomComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`, {
 
             // Change disc side
-            /*
             onUse(event, params) {
-                console.log("@ Disc item used")
-                // TODO set the name still
-
-
-
-
-            }
-            */
-            /*
-            onUseOn(event, params) {
-                console.log("@ Clicked on a block with a disc")
-
-
-            }
-            */
-
-            onUse(event, params) {
-                // TODO cooldown on mobile hold in air
-                // TODO sound
-
-                const block = event.source.getBlockFromViewDirection()?.block
-
-                if ( isBlockJukebox(block) ) return;
 
                 // Ignore if trying to interact with a jukebox
                 const looking_block = event.source.getBlockFromViewDirection(
@@ -103,48 +79,41 @@ export function registerRecordComponent() {
                         maxDistance: MAX_JUKEBOX_INTERACT_DISTANCE
                     }
                 )?.block;
+                if ( isBlockJukebox(looking_block) ) return;
 
-                if ( isBlockJukebox( looking_block ) ) {
-                    console.log("clicked on a jukebox")
+                // Get disc item
+                const disc_item = event.itemStack;
+                if (!disc_item) return;
+
+                const properties: any = params.params;
+                if (!properties) return;
+
+                // Continue only if multi disc
+                const songs_list: string[] = properties["songs"];
+                if ( !songs_list || !Array.isArray(songs_list) || songs_list.length <= 1) {
                     return;
                 }
 
-                else {
-                    // Get disc songs list
-                    const disc_item = event.itemStack;
-                    if (!disc_item) return;
+                // Get current side of the disc item
+                let song_id: number = disc_item.getDynamicProperty("song_id") as number;
+                if (typeof song_id !== "number") song_id = 0;
 
-                    // Get item properties
+                const inventory = event.source.getComponent("minecraft:inventory")?.container;
 
-                    // const properties = item.getComponent(
-                    //     `${MOD_NAMESPACE}:record`
-                    // )?.customComponentParameters.params as RecordComponent;
-                    const properties: any = params.params;
-                    if (!properties) return;
-
-                    const songs_list: string[] = properties["songs"];
-                    if ( !songs_list || !Array.isArray(songs_list) || songs_list.length <= 1) {
-                        return;
-                    }
-                    const songs_amount = songs_list.length;
-
-                    // Get current side of the disc item
-                    let song_id = disc_item.getDynamicProperty("song_id");
-                    if (typeof song_id !== "number") song_id = 0;
-
+                if (inventory) {
                     // Set the new side
-                    song_id = (song_id + 1) % songs_amount;
+                    song_id = (song_id + 1) % songs_list.length;
                     disc_item.setDynamicProperty("song_id", song_id);
                     setDiscLore(disc_item);
+                    inventory.setItem(event.source.selectedSlotIndex, disc_item);
 
-                    const inventory = event.source.getComponent("minecraft:inventory")?.container;
-
-                    if (inventory) {
-                        inventory.setItem(event.source.selectedSlotIndex, disc_item);
-                        event.source.playSound("game.player.attack.strong");
-                        event.source.onScreenDisplay.setActionBar("Switched disc side") //TODO localize
-                    }
-
+                    // Visual side flipping
+                    event.source.playSound("game.player.attack.strong");
+                    event.source.onScreenDisplay.setActionBar({
+                        rawtext: [
+                            { translate: "cdisc.disc_flipped" }
+                        ]
+                    });
                 }
 
             },
