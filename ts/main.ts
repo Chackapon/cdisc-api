@@ -26,7 +26,7 @@ import {
 import {
 	registerRecordComponent
 } from "./record_component";
-import {isMusicDisc, setDiscLore} from "./disc_handler";
+import {isMusicDisc, playersStopSound, setDiscLore} from "./disc_handler";
 import {fromJukeboxID, getJukeboxID, isBlockJukebox} from "./jukebox_handler";
 
 
@@ -121,12 +121,15 @@ export function subscribeEventSongDurationTicker() {
 							console.log(`Hopper size: ${container.size}`);
 							console.log(`Empty slots: ${container.emptySlotsCount}`);
 
-							for ( let slot = 0; slot < container.size; slot ++ ) {
-								const item = container.getItem(slot);
-								if (item) {
-									console.log(`At slot ${slot}: ${item.typeId} x${item.amount}`);
-								}
-								else console.log(`At slot ${slot}: empty`);
+							// TODO handle full hoppers
+							// TODO rethink some of the code and registries
+							if(container.emptySlotsCount > 0) {
+								const item_id = jukeboxRegistry.get(jukeboxID)["id"];
+								const disc_item = new ItemStack(item_id, 1);
+								disc_item.setDynamicProperty("song_id", jukeboxRegistry.get(jukeboxID)["song_id"])
+								container.addItem(disc_item);
+
+								jukeboxRegistry.delete(jukeboxID);
 							}
 
 							//container.addItem(ItemStack)
@@ -175,6 +178,7 @@ world.beforeEvents.playerBreakBlock.subscribe((event) => {
 
 	system.run(() => {
 		jukebox.dimension.spawnItem( disc_item, jukebox.location );
+		playersStopSound(jukebox_entry["sound"]);
 	});
 
 	jukeboxRegistry.delete(jukeboxID);
