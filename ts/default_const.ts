@@ -5,8 +5,6 @@ export const ADDON_NAME = "CDisc API"
 export const RECORD_COMPONENT_NAME = "record"
 export const JUKEBOX_COMPONENT_NAME = "jukebox"
 export const JUKEBOX_DATA_NAME = "jukebox_data";
-export const INHABITANT_STATE_NAME = "inhabitant"
-export const EMPTY_STATE_NAME = "is_empty"
 
 export const MAX_JUKEBOX_INTERACT_DISTANCE = 10;
 export const DEFAULT_CREATIVE_CONSUME = false;
@@ -19,9 +17,9 @@ export type RecordSong = {
 };
 
 export type JukeboxEntry = {
-    "id": string
-    "song_id": number
-    "sound": string
+    disc_id: string
+    song_id: number
+    // "sound": string
 };
 
 export type RecordComponent = {

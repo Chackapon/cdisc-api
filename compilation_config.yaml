@@ -3,13 +3,13 @@ ADDON_DESCRIPTION: "Add vanilla-like custom music discs with just one custom ite
 
 RP_VERSION: "1.2.6"
 BP_VERSION: "1.2.7"
-ADDON_VERSION: "1.0.1"
+ADDON_VERSION: "1.1"
 MIN_ENGINE_VERSION: "1.26.40"
 
 RP_UUID: "23021d6a-7e58-4c4d-a5d6-bc3b165de012"
 BP_UUID: "c4c3b4b2-7514-43c8-b3ce-668588dbac60"
 
-SERVER_VER: "2.9.0"
+SERVER_VER: "2.11.0"
 SERVER-UI_VER: "2.2.0"
 
 SEPARATE_EXPORT: false
