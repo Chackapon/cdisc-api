@@ -8,6 +8,7 @@ export const JUKEBOX_DATA_NAME = "jukebox_data";
 
 export const MAX_JUKEBOX_INTERACT_DISTANCE = 10;
 export const DEFAULT_CREATIVE_CONSUME = false;
+export const DEFAULT_JUKEBOX_INTERACTION_COOLDOWN = 5;
 
 export type RecordSong = {
     sound: string;

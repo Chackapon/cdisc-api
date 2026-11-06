@@ -1,5 +1,5 @@
 import {
-    Block, ItemStack, system,
+    Block,
     world
 } from "@minecraft/server";
 
@@ -7,12 +7,13 @@ import {
     ADDON_NAMESPACE,
     JUKEBOX_COMPONENT_NAME,
 } from "./default_const";
-import {jukeboxRegistry, soundInstanceRegistry} from "./registries";
+import {jukeboxRegistry} from "./registries";
 import {getBlockID} from "./utility/block_id";
+import {removeDisc} from "./disc_handler";
 
 /**
  * Tests if passed Block object is a jukebox. True if either:
- * 1. Block id is "minecraft:jukebox"
+ * 1. Contains the "minecraft:record_player" component
  * 2. Containts the CDisc jukebox block tag
  * @param block
  */
@@ -20,36 +21,68 @@ export function isBlockJukebox( block: Block | undefined ) {
     if ( !block ) return false;
 
     const cjukebox_component = block.hasTag(`${ADDON_NAMESPACE}:${JUKEBOX_COMPONENT_NAME}`)
+    const vanilla_component = block.hasComponent("minecraft:record_player")
     const juke_cond = cjukebox_component ?? false;
-    // console.log(juke_cond)
-    // console.log(block.typeId)
-    return juke_cond || block.typeId === "minecraft:jukebox";
+    const vanilla_cond = vanilla_component ?? false;
+
+    return juke_cond || vanilla_cond;
+}
+
+/**
+ * Tests if there is a vanilla music disc in the jukebox
+ * @param jukebox
+ */
+export function vanillaDiscInJukebox( jukebox: Block | undefined ) {
+    return jukebox?.getComponent("minecraft:record_player")?.getRecord() !== undefined;
+}
+
+/**
+ * Tests if there is a vanilla od CDisc music disc in the jukebox
+ * @param jukebox
+ */
+export function isJukeboxFull( jukebox: Block | undefined ) {
+    if ( !jukebox ) return false;
+    return vanillaDiscInJukebox(jukebox) || jukeboxRegistry.has(getBlockID(jukebox));
 }
 
 
 // Spawn disc on block break
-// TODO document
-// TODO handle non player breaking
+/**
+ * Subscribe event handlers for jukebox block breaking
+ */
 export function subscribeJukeboxBreakHandler() {
-    world.beforeEvents.playerBreakBlock.subscribe((event) => {
+    // NOTE vanilla jukebox is immovable, so handling pistons is not strictly necessary for now
+    // NOTE more robust on break handling is possible if custom jukeboxes are component driven, not tag
+
+    // Handle player breaking the jukebox
+    world.afterEvents.playerBreakBlock.subscribe((event) => {
+
+        // Get jukebox block
         const jukebox = event.block
         if (!isBlockJukebox(jukebox)) return;
-        const jukeboxID = getBlockID(jukebox);
-        const jukebox_entry = jukeboxRegistry.get(jukeboxID);
-        if (!jukebox_entry) return;
 
-        const disc_item = new ItemStack( jukebox_entry.disc_id, 1 );
+        // Create disc ItemStack
+        const disc_item = removeDisc( jukebox )
+        if (!disc_item) return
 
-        disc_item.setDynamicProperty("song_id", jukebox_entry["song_id"] ?? 0);
-
-
-        system.run(() => {
-            jukebox.dimension.spawnItem( disc_item, jukebox.location );
-            soundInstanceRegistry.get(jukeboxID)?.stop()
-        });
-
-        jukeboxRegistry.delete(jukeboxID);
-        soundInstanceRegistry.delete(jukeboxID);
+        // Spawn item
+        jukebox.dimension.spawnItem( disc_item, jukebox.location );
 
     });
+
+    // Handle jukeboxes breaking the jukebox
+    world.afterEvents.blockExplode.subscribe((event) => {
+
+        // Get jukebox block
+        const jukebox = event.block
+        if (!isBlockJukebox(jukebox)) return;
+
+        // Create disc ItemStack
+        const disc_item = removeDisc( jukebox )
+        if (!disc_item) return
+
+        // Spawn item
+        jukebox.dimension.spawnItem( disc_item, jukebox.location );
+
+    })
 }

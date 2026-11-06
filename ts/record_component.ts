@@ -4,7 +4,7 @@ import {
     MAX_JUKEBOX_INTERACT_DISTANCE,
 
 
-    RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME,
+    RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME, DEFAULT_JUKEBOX_INTERACTION_COOLDOWN,
 } from "./default_const";
 
 import {
@@ -32,7 +32,7 @@ import {
 } from "./disc_handler";
 
 import {
-    isBlockJukebox
+    isBlockJukebox, vanillaDiscInJukebox
 } from "./jukebox_handler"
 
 import {
@@ -113,23 +113,25 @@ export function registerRecordComponent() {
     // TODO refactor and document
     world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 
-        const player = event.player;
+
         const disc_item = event.itemStack;
 
         const jukebox = event.block;
         if ( !isBlockJukebox(jukebox) ) return;
 
-        // TODO test this - cancelling cdisc insertion if jukebox was playing with vanilla disc
-        if ( jukebox.getComponent("minecraft:record_player")?.isPlaying() ) return;
-        // jukebox.getComponent("minecraft:record_player")?.playRecord()
+        // Cancel the interaction if jukebox contains a vanilla music disc
+        if ( vanillaDiscInJukebox(jukebox) ) return;
 
+
+        // Handle per player interaction cooldown
+        const player = event.player;
         if (playerInteractionCooldown.has(player.id)) {
             return;
         }else{
             playerInteractionCooldown.add(player.id);
             system.runTimeout(()=>{
                 playerInteractionCooldown.delete(player.id);
-            }, 5);
+            }, DEFAULT_JUKEBOX_INTERACTION_COOLDOWN);
         }
 
 

@@ -226,7 +226,7 @@ export function playDisc( player: Player, jukebox: Block, song: RecordSong ): So
  * @param jukebox - Block object
  * @returns undefined if no addon disc was present, otherwise ItemStack object of that disc
  */
-function removeDisc( jukebox: Block ) {
+export function removeDisc( jukebox: Block ) {
     const jukeboxID = getBlockID(jukebox);
     const jukeboxEntry = jukeboxRegistry.get(jukeboxID);
 
