@@ -10,7 +10,7 @@
 		},
 		"components": {
 			"minecraft:emitter_initialization": {
-				"creation_expression": "variable.bpm = 2.15;variable.duration = 5;variable.color_range = 1;variable.color_offset = 0.5;"
+				"creation_expression": "variable.bpm = 1;variable.duration = 20;variable.color_range = 1;variable.color_offset = 0;"
 			},
 			"minecraft:emitter_rate_steady": {
 				"spawn_rate": "variable.bpm",

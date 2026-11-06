@@ -9,8 +9,7 @@ import {
 
 import {
     jukeboxRegistry,
-    currentPlayingRegistry,
-    discOwners
+    soundInstanceRegistry
 } from "./registries";
 
 // Dynamic world data handler library
@@ -20,7 +19,6 @@ import {
 } from './world_data_save.js';
 
 import {
-    Block,
     GameMode,
     system, world
 } from "@minecraft/server";
@@ -28,45 +26,25 @@ import {
 import {
     playDisc,
     ejectDisc,
-    playersStopSound,
-    getSong, setDiscLore, isMusicDisc
+    getSong,
+    setDiscLore,
+    isMusicDisc
 } from "./disc_handler";
 
 import {
-    getJukeboxID,
     isBlockJukebox
 } from "./jukebox_handler"
+
+import {
+    getBlockID
+} from "./utility/block_id"
 
 
 const playerInteractionCooldown = new Set<string>;
 
 export function registerRecordComponent() {
-    function handleJukboxEjection(jukebox: Block) {
-        // If jukebox has a disc inside of it, eject it
-        const jukeboxID = getJukeboxID(jukebox);
-        const jukeboxData = jukeboxRegistry.get(jukeboxID);
 
-        if (jukeboxData) {
-            jukeboxRegistry.delete(jukeboxID);
-
-
-            // Stop sound only if record is still playing
-            if (currentPlayingRegistry.get(jukeboxID)) {
-
-                currentPlayingRegistry.delete(jukeboxID);
-                system.run(()=> {
-                    playersStopSound(jukeboxData["sound"]);
-                });
-            }
-
-            // Eject disc item
-            system.run(()=>{
-                ejectDisc(jukebox, jukeboxData["id"], jukeboxData["song_id"]);
-            })
-
-        }
-    }
-
+    // TODO refactor and document
     system.beforeEvents.startup.subscribe( ({itemComponentRegistry}) => {
         itemComponentRegistry.registerCustomComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`, {
 
@@ -79,7 +57,7 @@ export function registerRecordComponent() {
                         maxDistance: MAX_JUKEBOX_INTERACT_DISTANCE
                     }
                 )?.block;
-                if ( isBlockJukebox(looking_block) ) return;
+                if (isBlockJukebox(looking_block)) return;
 
                 // Get disc item
                 const disc_item = event.itemStack;
@@ -90,7 +68,7 @@ export function registerRecordComponent() {
 
                 // Continue only if multi disc
                 const songs_list: string[] = properties["songs"];
-                if ( !songs_list || !Array.isArray(songs_list) || songs_list.length <= 1) {
+                if (!songs_list || !Array.isArray(songs_list) || songs_list.length <= 1) {
                     return;
                 }
 
@@ -111,7 +89,7 @@ export function registerRecordComponent() {
                     event.source.playSound("game.player.attack.strong");
                     event.source.onScreenDisplay.setActionBar({
                         rawtext: [
-                            { translate: "cdisc.disc_flipped" }
+                            {translate: "cdisc.disc_flipped"}
                         ]
                     });
                 }
@@ -129,105 +107,100 @@ export function registerRecordComponent() {
             // }
 
         });
-
-        world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
-
-            const player = event.player;
-            const disc_item = event.itemStack;
-            if (!isMusicDisc(disc_item)) return;
-
-            const jukebox = event.block;
-            if ( !isBlockJukebox(jukebox) ) return;
-
-            if (playerInteractionCooldown.has(player.id)) {
-                return;
-            }else{
-                playerInteractionCooldown.add(player.id);
-                system.runTimeout(()=>{
-                    playerInteractionCooldown.delete(player.id);
-                }, 5);
-            }
-
-
-            // console.log(`Is jukebox clicked: ${jukebox.typeId}, ${isBlockJukebox(jukebox)}`)
-
-            const jukeboxID = getJukeboxID(jukebox);
-
-
-            // Jukebox doesn't have a CDisc yet
-            if ( !jukeboxRegistry.has(getJukeboxID(jukebox)) ) {
-
-                if ( !disc_item?.hasComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
-                const song = getSong(disc_item);
-                // Remove item from player
-                const CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` ) ?? DEFAULT_CREATIVE_CONSUME; // TODO move to special place for afterload
-                if ( player.getGameMode() !== GameMode.Creative || CREATIVE_CONSUME ) {
-                    const inventory = player.getComponent("minecraft:inventory");
-                    system.run(()=>{
-                        inventory?.container?.setItem(player.selectedSlotIndex, undefined);
-                    })
-                }
-
-
-                // Insert disc into jukebox and play
-                jukeboxRegistry.set(jukeboxID, {
-                    "id": disc_item.typeId,
-                    "song_id": disc_item.getDynamicProperty("song_id") as number,
-                    "sound": song.sound
-                }); // TODO consider saving disc side as well
-
-                // Add to current playing
-                const oldJukeboxID = discOwners.get(disc_item.typeId);
-                if (oldJukeboxID !== undefined) {
-                    currentPlayingRegistry.delete( oldJukeboxID );
-                }
-                discOwners.set( disc_item.typeId, jukeboxID );
-
-
-
-
-
-
-                const duration = song.duration;
-
-                currentPlayingRegistry.set(jukeboxID, duration);
-
-                system.run(()=> {
-                    playDisc( player, jukebox, song);
-                });
-
-
-
-            }
-            else { // todo: this must work regardless of item used
-                handleJukboxEjection(jukebox);
-            }
-
-            // Save updated jukebox contents registry
-            // saveJukeboxData();
-            saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
-            // player.sendMessage(`registry size: ${jukeboxRegistry.size}`);
-
-        })
-
-        /*
-        world.afterEvents.playerSwingStart.subscribe( (event) => {
-            console.log("@ Ejecting disc with non-disc")
-
-            const block = event.player.getBlockFromViewDirection(
-                {
-                    maxDistance: MAX_JUKEBOX_INTERACT_DISTANCE
-                }
-            )?.block;
-            if (!block) return;
-            if ( !isBlockJukebox(block) ) return;
-
-            if ( jukeboxRegistry.has(getJukeboxID(block)) ) {
-                handleJukboxEjection(block);
-                saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
-            }
-
-        });
-        */
     });
+
+
+    // TODO refactor and document
+    world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
+
+        const player = event.player;
+        const disc_item = event.itemStack;
+
+        const jukebox = event.block;
+        if ( !isBlockJukebox(jukebox) ) return;
+
+        // TODO test this - cancelling cdisc insertion if jukebox was playing with vanilla disc
+        if ( jukebox.getComponent("minecraft:record_player")?.isPlaying() ) return;
+        // jukebox.getComponent("minecraft:record_player")?.playRecord()
+
+        if (playerInteractionCooldown.has(player.id)) {
+            return;
+        }else{
+            playerInteractionCooldown.add(player.id);
+            system.runTimeout(()=>{
+                playerInteractionCooldown.delete(player.id);
+            }, 5);
+        }
+
+
+        // console.log(`Is jukebox clicked: ${jukebox.typeId}, ${isBlockJukebox(jukebox)}`)
+
+        const jukeboxID = getBlockID(jukebox);
+
+
+        // Jukebox doesn't have a CDisc yet
+        if ( !jukeboxRegistry.has(getBlockID(jukebox)) ) {
+
+            // TODO isnt that the same check and why cant i remove one of them
+            if (!isMusicDisc(disc_item)) return;
+            if ( !disc_item?.hasComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
+
+
+
+
+            // Remove item from player
+            const CREATIVE_CONSUME = loadWorldData( `${ADDON_NAMESPACE}:consume_creative` ) ?? DEFAULT_CREATIVE_CONSUME; // TODO move to special place for afterload
+            if ( player.getGameMode() !== GameMode.Creative || CREATIVE_CONSUME ) {
+                const inventory = player.getComponent("minecraft:inventory");
+                system.run(()=>{
+                    inventory?.container?.setItem(player.selectedSlotIndex, undefined);
+                })
+            }
+
+            // Get the song record
+            const song = getSong(disc_item);
+
+            // Play the sound and get it's instance
+            system.run(()=> {
+                const song_instance = playDisc( player, jukebox, song);
+                if (!song_instance) return;
+
+                // Register the sound instance
+                soundInstanceRegistry.set(jukeboxID, song_instance);
+                // console.log(`Addef ${song_instance.id} to registry, now size ${soundInstanceRegistry.size}`)
+                console.log(`Song instance id: ${song_instance.id}, duration ${song_instance.durationInfo?.duration}`);
+                console.log(`Targets: ${song_instance.recipient}`)
+            });
+
+
+            // Add the inserted disc to the registry
+            // console.log(`Reached adding the registry, current size ${jukeboxRegistry.size}`)
+            jukeboxRegistry.set(jukeboxID, {
+                disc_id: disc_item.typeId,
+                song_id: disc_item.getDynamicProperty("song_id") as number,
+            }); // TODO consider saving disc side as well
+            // console.log(`after adding ${jukeboxID} size is now ${jukeboxRegistry.size}`);
+
+            // Add to current playing
+
+            // const oldJukeboxID = discOwners.get(disc_item.typeId);
+            // if (oldJukeboxID !== undefined) {
+            //     currentPlayingRegistry.delete( oldJukeboxID );
+            // }
+            // discOwners.set( disc_item.typeId, jukeboxID );
+
+        }
+        else { // todo: this must work regardless of item used
+            event.cancel = true
+            system.run(()=>{
+                ejectDisc(jukebox);
+            })
+        }
+
+        // Save updated jukebox contents registry
+        // saveJukeboxData();
+        saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
+        // player.sendMessage(`registry size: ${jukeboxRegistry.size}`);
+
+    })
 }

@@ -11,50 +11,46 @@ import {
 	loadWorldData
 } from './world_data_save.js';
 
-//
+// Data registries
 import {
 	jukeboxRegistry,
-	currentPlayingRegistry,
 } from "./registries";
 
+// Script API
 import {
-	ItemStack,
 	world,
-	system
 } from "@minecraft/server";
 
+// CDisc item component
 import {
 	registerRecordComponent
 } from "./record_component";
-import {isMusicDisc, playersStopSound, setDiscLore} from "./disc_handler";
-import {fromJukeboxID, getJukeboxID, isBlockJukebox} from "./jukebox_handler";
+
+// Event subscribers
+import {
+	subscribeEventInventoryChangeLore
+} from "./disc_handler";
+import {
+	subscribeJukeboxBreakHandler
+} from "./jukebox_handler";
 
 
-class DiscStack {
-	item: ItemStack;
-
-	constructor(item_type: string | ItemStack) {
-		if (item_type instanceof ItemStack) {
-			this.item = item_type;
-		}
-		else {
-			this.item = new ItemStack(item_type, 1);
-		}
-
-		setDiscLore( this.item )
-	}
-}
-
-
+// Load the jukebox registry world data
 world.afterEvents.worldLoad.subscribe( () => {
 	loadWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
-
 });
+
+// Register the cdisc:record item component
 registerRecordComponent();
 
+// Add lore to dropped item
+// subscribeEventItemEntityLore();
 
+// Add lore on inventory change
+subscribeEventInventoryChangeLore();
 
-//// bleh
+// Spawn disc on block break
+subscribeJukeboxBreakHandler();
 
 //@@@ Settings
 import {
@@ -67,52 +63,12 @@ settings.textField( `${ADDON_NAMESPACE}:jukebox_reach`, "Use distance for jukebo
 
 
 
-// Add lore to dropped item
-export function subscribeEventItemEntityLore() {
-	world.afterEvents.entitySpawn.subscribe(({ entity }) => {
-
-		if (entity.typeId !== "minecraft:item") return;
-
-		const itemComponent = entity.getComponent("minecraft:item");
-		if (!itemComponent) return;
-
-    	const oldItem = itemComponent.itemStack;
-    	if (!isMusicDisc(oldItem)) return;
-
-    	// Already has lore
-    	if (oldItem.getLore().length > 0) return;
-
-    	const newItem = oldItem.clone();
-
-    	setDiscLore( newItem );
-
-    	const dimension = entity.dimension;
-    	const location = entity.location;
-
-    	entity.remove();
-    	dimension.spawnItem(newItem, location);
-	});
-}
-// subscribeEventItemEntityLore();
-
-// Add lore on inventory change
-export function subscribeEventInventoryChangeLore() {
-	world.afterEvents.playerInventoryItemChange.subscribe((event)=> {
-		const disc_item = event.itemStack;
-		if (!disc_item || !isMusicDisc(disc_item)) return;
-
-		const inventory = event.player.getComponent("minecraft:inventory")?.container;
-		if (!inventory) return;
-
-		setDiscLore(disc_item);
-		inventory.setItem(event.slot, disc_item);
-	})
-}
-subscribeEventInventoryChangeLore();
-
 // Tick all playing songs every second
+// TODO remove duration ticking, just on song end stop particle, send to lower hopper, check side and top hoppers (possibly unlock them when there was a previous lock)
+/*
 export function subscribeEventSongDurationTicker() {
 	system.runInterval(() => {
+
 		currentPlayingRegistry.forEach( (duration, jukeboxID) => {
 			if ( duration-1 <= 0 ) {
 				currentPlayingRegistry.delete(jukeboxID);
@@ -160,8 +116,11 @@ export function subscribeEventSongDurationTicker() {
 	}, 20);
 }
 subscribeEventSongDurationTicker();
+*/
 
 // Play note particle
+// TODO custom looping particle with tempo info launched in playDisc and ended by song end/block break
+/*
 export function subscribeEventNoteParticles() {
 	system.runInterval(() => {
 		currentPlayingRegistry.forEach( (value, jukeboxID) => {
@@ -178,54 +137,21 @@ export function subscribeEventNoteParticles() {
 	}, 20);
 }
 subscribeEventNoteParticles();
+*/
 
-// Spawn disc on block break
-world.beforeEvents.playerBreakBlock.subscribe((event) => {
-	const jukebox = event.block
-	if (!isBlockJukebox(jukebox)) return;
-	const jukeboxID = getJukeboxID(jukebox);
-	const jukebox_entry = jukeboxRegistry.get(jukeboxID);
-	if (!jukebox_entry) return;
-
-	const disc_item = new ItemStack( jukebox_entry["id"], 1 );
-
-	disc_item.setDynamicProperty("song_id", jukebox_entry["song_id"] ?? 0);
-
-
-	system.run(() => {
-		jukebox.dimension.spawnItem( disc_item, jukebox.location );
-		playersStopSound(jukebox_entry["sound"]);
-	});
-
-	jukeboxRegistry.delete(jukeboxID);
-	currentPlayingRegistry.delete(jukeboxID);
-
-});
-
-/// debug
 /*
-system.runInterval(() => {
-    for (const player of world.getAllPlayers()) {
-        if (!player.isSneaking) continue;
-			player.sendMessage(
-            `§ejukeboxRegistry: ${JSON.stringify(Object.fromEntries(jukeboxRegistry))}`
-        );
+class DiscStack {
+	item: ItemStack;
 
-			
-			if (player.getComponent("minecraft:equippable")
-    ?.getEquipment("Offhand")?.typeId !== "minecraft:arrow") return;
+	constructor(item_type: string | ItemStack) {
+		if (item_type instanceof ItemStack) {
+			this.item = item_type;
+		}
+		else {
+			this.item = new ItemStack(item_type, 1);
+		}
 
-        const container = player.getComponent("minecraft:inventory")?.container;
-        if (!container) continue;
-
-        const item = container.getItem(player.selectedSlotIndex);
-        if (!item) continue;
-
-        const tags = item.getTags();
-
-        player.sendMessage(
-            `§e${item.typeId}\n§7Tags: ${tags.length ? tags.join(", ") : "None"}`
-        );
-    }
-}, 5);
+		setDiscLore( this.item )
+	}
+}
 */
