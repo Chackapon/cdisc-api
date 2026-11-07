@@ -1,0 +1,35 @@
+{
+	"format_version": "1.26.40",
+	"minecraft:item": {
+		"description": {
+			"identifier": "cdisc:test_record",
+			"menu_category": {
+				"category": "items"
+			}
+		},
+		"components": {
+			"minecraft:icon": "record.13",
+
+			"minecraft:display_name": { "value": "Music Disc" },
+			"minecraft:rarity": "rare",
+			"minecraft:hover_text_color": "yellow",
+
+			"minecraft:max_stack_size": 1,
+			"minecraft:allow_off_hand": true,
+			"minecraft:hand_equipped": false,
+
+			"cdisc:record": {
+				"songs": ["test", "undefined"],
+				"test": {
+					"duration": 7
+				},
+				"undefined": {
+					"sound": "raid.horn",
+					"title": "Raid Horn",
+					"author": "Test record",
+					"duration": 7
+				}
+			}
+		}
+	}
+}
