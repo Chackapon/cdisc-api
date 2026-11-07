@@ -18,6 +18,15 @@ export function isMusicDisc( item: ItemStack | undefined ) {
 }
 
 
+// TODO document
+export function getDiscSideID(disc_item: ItemStack) {
+    // TODO refactor all usages to this function
+    let song_id: number = disc_item.getDynamicProperty("song_id") as number;
+    if (typeof song_id !== "number") song_id = 0;
+    return song_id;
+}
+
+
 /**
  * Stops the game music
  */
@@ -167,7 +176,7 @@ export function setDiscLore( disc_item: ItemStack ) {
 export function playDisc( player: Player, jukebox: Block, song: RecordSong ): SoundInstance | undefined {
 
     // TODO remove this
-    playersStopMusic();
+    // playersStopMusic();
 
     // let disc_lang_key = "record." + disc_item.typeId.split(":")[1]
     if (!player) return undefined;
