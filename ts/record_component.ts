@@ -28,7 +28,8 @@ import {
     ejectDisc,
     getSong,
     setDiscLore,
-    isMusicDisc
+    isMusicDisc,
+    getDiscSideID
 } from "./disc_handler";
 
 import {
@@ -73,12 +74,12 @@ export function registerRecordComponent() {
                 }
 
                 // Get current side of the disc item
-                let song_id: number = disc_item.getDynamicProperty("song_id") as number;
-                if (typeof song_id !== "number") song_id = 0;
+                let song_id = getDiscSideID(disc_item);
 
                 const inventory = event.source.getComponent("minecraft:inventory")?.container;
 
                 if (inventory) {
+
                     // Set the new side
                     song_id = (song_id + 1) % songs_list.length;
                     disc_item.setDynamicProperty("song_id", song_id);
@@ -95,16 +96,6 @@ export function registerRecordComponent() {
                 }
 
             },
-
-            // onUseOn(event) {
-            //
-            //     const block = event.block;
-            //     if ( !isBlockJukebox(block) ) return;
-            //
-            //     console.log("@ onUseOn")
-            //     console.log(`block: ${event.block?.typeId}`);
-            //     console.log(`item: ${event.itemStack?.typeId}`)
-            // }
 
         });
     });
