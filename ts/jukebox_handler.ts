@@ -5,7 +5,7 @@ import {
 
 import {
     ADDON_NAMESPACE,
-    JUKEBOX_COMPONENT_NAME, JukeboxEntry,
+    JUKEBOX_COMPONENT_NAME, JukeboxEntry, RECORD_SIDE_DATA_NAME,
 } from "./default_const";
 import {jukeboxRegistry} from "./registries";
 import {getBlockID} from "./utility/block_id";
@@ -29,7 +29,7 @@ class JukeboxRegistry {
     add( jukebox: Block, disc_item: ItemStack ) {
         this.registry.set( getBlockID(jukebox), {
             disc_id: disc_item.typeId,
-            song_id: disc_item.getDynamicProperty("song_id") as number,
+            song_id: disc_item.getDynamicProperty(`${RECORD_SIDE_DATA_NAME}`) as number,
         } );
     }
 

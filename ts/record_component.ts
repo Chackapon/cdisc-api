@@ -4,7 +4,7 @@ import {
     MAX_JUKEBOX_INTERACT_DISTANCE,
 
 
-    RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME, DEFAULT_JUKEBOX_INTERACTION_COOLDOWN,
+    RECORD_COMPONENT_NAME, DEFAULT_CREATIVE_CONSUME, DEFAULT_JUKEBOX_INTERACTION_COOLDOWN, RECORD_SIDE_DATA_NAME,
 } from "./default_const";
 
 import {
@@ -82,7 +82,7 @@ export function registerRecordComponent() {
 
                     // Set the new side
                     song_id = (song_id + 1) % songs_list.length;
-                    disc_item.setDynamicProperty("song_id", song_id);
+                    disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, song_id);
                     setDiscLore(disc_item);
                     inventory.setItem(event.source.selectedSlotIndex, disc_item);
 
@@ -103,9 +103,6 @@ export function registerRecordComponent() {
 
     // TODO refactor and document
     world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
-
-
-        const disc_item = event.itemStack;
 
         const jukebox = event.block;
         if ( !isBlockJukebox(jukebox) ) return;
@@ -135,10 +132,9 @@ export function registerRecordComponent() {
         if ( !jukeboxRegistry.has(getBlockID(jukebox)) ) {
 
             // TODO isnt that the same check and why cant i remove one of them
+            const disc_item = event.itemStack;
             if (!isMusicDisc(disc_item)) return;
             if ( !disc_item?.hasComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`)) return;
-
-
 
 
             // Remove item from player
@@ -153,16 +149,9 @@ export function registerRecordComponent() {
             // Get the song record
             const song = getSong(disc_item);
 
-            // Play the sound and get it's instance
+            // Play the sound
             system.run(()=> {
-                const song_instance = playDisc( player, jukebox, song);
-                if (!song_instance) return;
-
-                // Register the sound instance
-                soundInstanceRegistry.set(jukeboxID, song_instance);
-                // console.log(`Addef ${song_instance.id} to registry, now size ${soundInstanceRegistry.size}`)
-                console.log(`Song instance id: ${song_instance.id}, duration ${song_instance.durationInfo?.duration}`);
-                console.log(`Targets: ${song_instance.recipient}`)
+                playDisc( player, jukebox, song);
             });
 
 
@@ -170,18 +159,9 @@ export function registerRecordComponent() {
             // console.log(`Reached adding the registry, current size ${jukeboxRegistry.size}`)
             jukeboxRegistry.set(jukeboxID, {
                 disc_id: disc_item.typeId,
-                song_id: disc_item.getDynamicProperty("song_id") as number,
+                song_id: disc_item.getDynamicProperty(`${RECORD_SIDE_DATA_NAME}`) as number,
             }); // TODO consider saving disc side as well
             // console.log(`after adding ${jukeboxID} size is now ${jukeboxRegistry.size}`);
-
-            // Add to current playing
-
-            // const oldJukeboxID = discOwners.get(disc_item.typeId);
-            // if (oldJukeboxID !== undefined) {
-            //     currentPlayingRegistry.delete( oldJukeboxID );
-            // }
-            // discOwners.set( disc_item.typeId, jukeboxID );
-
         }
         else { // todo: this must work regardless of item used
             event.cancel = true
@@ -191,9 +171,7 @@ export function registerRecordComponent() {
         }
 
         // Save updated jukebox contents registry
-        // saveJukeboxData();
         saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
         // player.sendMessage(`registry size: ${jukeboxRegistry.size}`);
-
     })
 }
