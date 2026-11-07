@@ -1,15 +1,43 @@
 import {
-    Block,
+    Block, ItemStack,
     world
 } from "@minecraft/server";
 
 import {
     ADDON_NAMESPACE,
-    JUKEBOX_COMPONENT_NAME,
+    JUKEBOX_COMPONENT_NAME, JukeboxEntry,
 } from "./default_const";
 import {jukeboxRegistry} from "./registries";
 import {getBlockID} from "./utility/block_id";
 import {removeDisc} from "./disc_handler";
+
+
+/**
+ * New wrapper for the jukeboxRegistry concept, intended for automatic handling of hoppers and such on disc replacement
+ */
+class JukeboxRegistry {
+    private registry: Map<string, JukeboxEntry>;
+
+    constructor (){
+        this.registry = new Map<string, JukeboxEntry>()
+    }
+
+    has( jukebox: Block ) {
+        return this.registry.has( getBlockID(jukebox) );
+    }
+
+    add( jukebox: Block, disc_item: ItemStack ) {
+        this.registry.set( getBlockID(jukebox), {
+            disc_id: disc_item.typeId,
+            song_id: disc_item.getDynamicProperty("song_id") as number,
+        } );
+    }
+
+    delete( jukebox: Block ) {
+        jukeboxRegistry.delete( getBlockID(jukebox) );
+        // TODO handle hopper
+    }
+}
 
 /**
  * Tests if passed Block object is a jukebox. True if either:
