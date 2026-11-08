@@ -2,10 +2,7 @@
 	"format_version": "1.26.40",
 	"minecraft:item": {
 		"description": {
-			"identifier": "cdisc:test_record",
-			"menu_category": {
-				"category": "items"
-			}
+			"identifier": "cdisc:test_record"
 		},
 		"components": {
 			"minecraft:icon": "record_13",
