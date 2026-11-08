@@ -1,0 +1,21 @@
+{
+  "name": "componentdisc-api",
+  "version": "1.0.0",
+  "description": "![Minecraft Version](https://img.shields.io/badge/Minecraft_Bedrock-1.21.50-brightgreen)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@minecraft/server": "2.11.0",
+    "@minecraft/server-ui": "^2.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
