@@ -236,8 +236,8 @@ export function playDisc( player: Player, jukebox: Block, song: RecordSong ): So
             y: jukebox.location.y + 1.2,
             z: jukebox.location.z + 0.5
         });
-    }, particleInterval );
-
+    }, particleInterval );//TODO play once on disc load, extract particle method
+    
     // Add a callback handling song end
     const songEndHandler = system.runTimeout(() => stopSongHandler(jukebox,false), 20 * song.duration );
 
@@ -265,10 +265,12 @@ export function removeDisc( jukebox: Block ) {
     const jukeboxID = getBlockID(jukebox);
     const jukeboxEntry = jukeboxRegistry.get(jukeboxID);
 
-    if (!jukeboxEntry) return;
-
     // Remove playing jukebox from the registry
     jukeboxRegistry.delete(jukeboxID);
+
+    if (!jukeboxEntry) return;
+
+
 
     // Return the disc in item form
     const disc_item = new ItemStack( jukeboxEntry.disc_id, 1 );

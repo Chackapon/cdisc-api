@@ -171,6 +171,7 @@ export function registerRecordComponent() {
             })
         }
 
+        // TODO consider moving somewhere else
         // Save updated jukebox contents registry
         saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
         // player.sendMessage(`registry size: ${jukeboxRegistry.size}`);

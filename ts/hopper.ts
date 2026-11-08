@@ -3,7 +3,8 @@ import {hopperJukeboxRegistry, jukeboxRegistry} from "./registries";
 import {fromBlockID, getBlockID} from "./utility/block_id";
 import {isBlockJukebox} from "./jukebox_handler";
 import {removeDisc, stopSongHandler} from "./disc_handler";
-import {ADDON_NAMESPACE, DEFAULT_HOPPER_POLLING_TIME, HOPPER_TAG} from "./default_const";
+import {ADDON_NAMESPACE, DEFAULT_HOPPER_POLLING_TIME, HOPPER_TAG, JUKEBOX_DATA_NAME} from "./default_const";
+import {saveWorldData} from "./world_data_save";
 
 //8 tick polling speed by default
 /**
@@ -38,6 +39,9 @@ function hopperEjecter( jukebox: Block | undefined ) {
         hopperJukeboxRegistry.delete(jukeboxID);
 
         // TODO launch hopperInjector
+
+        // Save updated jukebox contents registry
+        saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
     }
 }
 
