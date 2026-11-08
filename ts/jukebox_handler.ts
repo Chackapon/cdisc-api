@@ -1,5 +1,5 @@
 import {
-    Block, ItemStack,
+    Block, ItemStack, system,
     world
 } from "@minecraft/server";
 
@@ -9,7 +9,7 @@ import {
 } from "./default_const";
 import {jukeboxRegistry} from "./registries";
 import {getBlockID} from "./utility/block_id";
-import {removeDisc} from "./disc_handler";
+import {removeDisc, stopSongHandler} from "./disc_handler";
 
 
 /**
@@ -83,7 +83,7 @@ export function subscribeJukeboxBreakHandler() {
     // NOTE more robust on break handling is possible if custom jukeboxes are component driven, not tag
 
     // Handle player breaking the jukebox
-    world.afterEvents.playerBreakBlock.subscribe((event) => {
+    world.beforeEvents.playerBreakBlock.subscribe((event) => {
 
         // Get jukebox block
         const jukebox = event.block
@@ -93,8 +93,11 @@ export function subscribeJukeboxBreakHandler() {
         const disc_item = removeDisc( jukebox )
         if (!disc_item) return
 
-        // Spawn item
-        jukebox.dimension.spawnItem( disc_item, jukebox.location );
+        // Spawn item and stop sound outside of restricted mode
+        system.run(()=>{
+            stopSongHandler(jukebox);
+            jukebox.dimension.spawnItem( disc_item, jukebox.location );
+        });
 
     });
 

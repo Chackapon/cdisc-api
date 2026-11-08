@@ -7,7 +7,7 @@ import {
     RECORD_COMPONENT_NAME, RECORD_SIDE_DATA_NAME
 } from "./default_const";
 import {getBlockID} from "./utility/block_id";
-import {jukeboxRegistry, soundInstanceRegistry} from "./registries";
+import {hopperJukeboxRegistry, jukeboxRegistry, soundInstanceRegistry} from "./registries";
 
 /**
  * Checks if ItemStack is a CDisc disc item. Undefined items are treated as non discs
@@ -20,7 +20,6 @@ export function isMusicDisc( item: ItemStack | undefined ) {
 
 // TODO document
 export function getDiscSideID(disc_item: ItemStack) {
-    // TODO refactor all usages to this function
     let song_id: number = disc_item.getDynamicProperty(`${RECORD_SIDE_DATA_NAME}`) as number;
     if (typeof song_id !== "number") song_id = 0;
     return song_id;
@@ -172,13 +171,22 @@ export function setDiscLore( disc_item: ItemStack ) {
 } //todo: fix this
 
 // TODO document
-function stopSongHandler( jukebox: Block ) {
+/**
+ * Callback that cleans up after the song ends. If it wasn't interrupted, handles jukebox being added to hopper polling
+ * @param jukebox
+ * @param isInterrupted
+ */
+export function stopSongHandler( jukebox: Block, isInterrupted = true ) {
 
     // Retreive sound entry
     const jukeboxID = getBlockID( jukebox );
     const sound_entry = soundInstanceRegistry.get(jukeboxID);
 
     if (sound_entry) {
+
+        // Cancel its scheduled non-interrupted stop handler
+        system.clearRun( sound_entry?.songEnder );
+
         // Stop the sound
         sound_entry.sound.stop()
 
@@ -186,40 +194,12 @@ function stopSongHandler( jukebox: Block ) {
         const particleEmitterID = sound_entry.particleEmitter;
         system.clearRun( particleEmitterID )
 
-        // TODO maybe removeDisc/eject should be here? or just return the disc item idk
-
     }
-
-    // NOTE: removeDisc should not be used here (only for hopper)
 
     //todo stop redstone
-
-    // TODO refactor into a separate under hopper method
-    // Get the hopper block underneath the jukebox
-    const under_juke_location = {
-        x: jukebox.location.x,
-        y: jukebox.location.y - 1,
-        z: jukebox.location.z
-    }
-
-    if (!jukeboxRegistry.has(jukeboxID)) return;
-    const hopper_block = jukebox.dimension.getBlock(under_juke_location);
-    if ( hopper_block?.typeId === "minecraft:hopper" ) {
-        console.log("Hopper found under a jukebox where a song ended")
-        const hopper_inv = hopper_block.getComponent("minecraft:inventory")
-        if ( hopper_inv?.container ) {
-            const container = hopper_inv.container;
-            console.log(`Hopper size: ${container.size}`);
-            console.log(`Empty slots: ${container.emptySlotsCount}`);
-
-            // TODO handle full hoppers
-            if(container.emptySlotsCount > 0) {
-                // TODO circular call stopSongHandler + removeDisc
-                const disc_item = removeDisc(jukebox);
-                if (!disc_item) return;
-                container.addItem(disc_item);
-            }
-        }
+    //todo hopper inject
+    if (!isInterrupted) {
+        hopperJukeboxRegistry.add(getBlockID(jukebox));
     }
 }
 
@@ -245,7 +225,6 @@ export function playDisc( player: Player, jukebox: Block, song: RecordSong ): So
         }
     );
     if (!sound_event) console.error( `Sould not play the sound "${song.sound}"` );
-    else console.log(`Playing sound ${song.sound} with id=${sound_event.id}`);
 
 
     // TODO document and extrsct method
@@ -259,17 +238,19 @@ export function playDisc( player: Player, jukebox: Block, song: RecordSong ): So
         });
     }, particleInterval );
 
+    // Add a callback handling song end
+    const songEndHandler = system.runTimeout(() => stopSongHandler(jukebox,false), 20 * song.duration );
+
 
     // Enter the SoundEntry using the played sound and created particle generator
     soundInstanceRegistry.set(getBlockID(jukebox), {
         particleEmitter: particleTicker,
+        songEnder: songEndHandler,
         sound: sound_event
     })
 
 
-    // Add a callback handling song end
-    console.log("Registering the song end handler")
-    system.runTimeout(() => stopSongHandler(jukebox), 20 * song.duration );
+
 
     return sound_event
 
@@ -289,17 +270,6 @@ export function removeDisc( jukebox: Block ) {
     // Remove playing jukebox from the registry
     jukeboxRegistry.delete(jukeboxID);
 
-    // Stop sound only if record is still playing
-    // const song_instance = soundInstanceRegistry.get(jukeboxID);
-    // if (!song_instance) return; //TODO consider changing to an error - this might cause a broken sound to not return the disc item
-    // console.log(`This jukebox hosted song_instance id=${song_instance?.sound.id}`)
-    // soundInstanceRegistry.delete(jukeboxID);
-
-    // Handle sound and particle ender
-    stopSongHandler(jukebox);
-
-
-
     // Return the disc in item form
     const disc_item = new ItemStack( jukeboxEntry.disc_id, 1 );
     disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, jukeboxEntry.song_id ?? 0); // TODO conflicts with the no dyn property handling of single sided discs
@@ -312,6 +282,8 @@ export function removeDisc( jukebox: Block ) {
  */
 export function ejectDisc( jukebox: Block ) {
     const disc_item = removeDisc(jukebox);
+    stopSongHandler(jukebox);
+
     if (!disc_item) return;
 
     const spawn_location = {

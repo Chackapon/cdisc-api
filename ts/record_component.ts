@@ -88,9 +88,10 @@ export function registerRecordComponent() {
 
                     // Visual side flipping
                     event.source.playSound("game.player.attack.strong");
+                    // event.source.playAnimation();
                     event.source.onScreenDisplay.setActionBar({
                         rawtext: [
-                            {translate: "cdisc.disc_flipped"}
+                            { translate: "cdisc.disc_flipped"}
                         ]
                     });
                 }

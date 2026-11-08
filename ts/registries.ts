@@ -1,4 +1,5 @@
 import {JukeboxEntry, SoundEntry} from "./default_const";
+import {Block} from "@minecraft/server";
 
 
 /**
@@ -13,3 +14,6 @@ export const jukeboxRegistry = new Map<string, JukeboxEntry>();
  * This registry is not to be saved and handles the sound playback
  */
 export const soundInstanceRegistry = new Map<string, SoundEntry>();
+
+
+export const hopperJukeboxRegistry = new Set<string | undefined>

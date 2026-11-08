@@ -4,7 +4,7 @@ import {Block, world} from "@minecraft/server";
  * Encodes a Block object into a string ID
  * @param jukebox
  */
-export function getBlockID(jukebox: Block ) {
+export function getBlockID(jukebox: Block | undefined ): string {
     if (!jukebox) return "none";
     return `${String(jukebox.dimension.id)}@${jukebox.location.x}_${jukebox.location.y}_${jukebox.location.z}`;
 }

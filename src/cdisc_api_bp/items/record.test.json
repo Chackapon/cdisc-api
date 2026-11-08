@@ -8,7 +8,7 @@
 			}
 		},
 		"components": {
-			"minecraft:icon": "record.13",
+			"minecraft:icon": "record_13",
 
 			"minecraft:display_name": { "value": "Music Disc" },
 			"minecraft:rarity": "rare",

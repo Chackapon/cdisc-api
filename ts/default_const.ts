@@ -7,12 +7,14 @@ export const ADDON_NAMESPACE = "cdisc";
 export const ADDON_NAME = "CDisc API"
 export const RECORD_COMPONENT_NAME = "record"
 export const JUKEBOX_COMPONENT_NAME = "jukebox"
+export const HOPPER_TAG = "hopper"
 export const JUKEBOX_DATA_NAME = "jukebox_data";
 export const RECORD_SIDE_DATA_NAME = "song_id"
 
 export const MAX_JUKEBOX_INTERACT_DISTANCE = 10;
 export const DEFAULT_CREATIVE_CONSUME = false;
 export const DEFAULT_JUKEBOX_INTERACTION_COOLDOWN = 5;
+export const DEFAULT_HOPPER_POLLING_TIME = 8;
 
 export type RecordSong = {
     sound: string;
@@ -31,6 +33,7 @@ export type JukeboxEntry = {
 export type SoundEntry = {
     sound: SoundInstance;
     particleEmitter: number
+    songEnder: number
 }
 
 
