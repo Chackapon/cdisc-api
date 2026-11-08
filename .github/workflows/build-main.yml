@@ -1,0 +1,8 @@
+name: Build Addon from main branch
+on: ["push"]
+jobs:
+  Build-Main-Branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile TypeScript files to JavaScript
+        run: npm run compile
