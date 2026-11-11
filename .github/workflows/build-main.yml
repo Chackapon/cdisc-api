@@ -25,10 +25,10 @@ jobs:
         run: pip3 install -r requirements.txt
 
       - name: Package .mcaddon file
-        run: python3 package_addon.py
+        run: python3 package_addon.py --is_release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          path: export
+          path: "export/CDisc API.mcaddon"
 

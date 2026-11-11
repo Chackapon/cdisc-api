@@ -1,5 +1,6 @@
 import json
 import zipfile
+import argparse
 
 import semver
 from pathlib import Path
@@ -27,18 +28,39 @@ rp_source = SRC_DIR / "cdisc_api_rp"
 bp_source = SRC_DIR / "cdisc_api_bp"
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--is_release",
+    help="Marks the package as a release build",
+    action="store_true"
+)
+
+if parser.parse_args().is_release:
+    print("@ This is a release version")
+
+
 
 def increment_manifest_pack_version( manifest: dict, target_ver: str, release = False) -> str:
     current_version = semver.Version.parse(manifest['header']['version'])
     config_version = semver.Version.parse(target_ver)
 
     if current_version.replace(prerelease=None).compare(config_version):
-        print(f"> Higher version requested in the config, changing from {current_version} to {str(config_version) + "-build.1"}")
+        if release:
+            print(f"> Higher version requested in the config, changing from {current_version} to {str(config_version)}")
+        else:
+
+            print(f"> Higher version requested in the config, changing from {current_version} to {str(config_version) + "-build.1"}")
+
         current_version = (str(config_version))
         if not release: current_version += "-build.1"
+
     else:
-        print(f"> Bumping build version from {current_version.prerelease} to {current_version.bump_prerelease(token="build").prerelease}")
-        current_version = current_version.bump_prerelease(token="build")
+        if release:
+            print(f"> Removing build version from the version {current_version}, now it's {current_version.finalize_version()}")
+            current_version = current_version.finalize_version()
+        else:
+            print(f"> Bumping build version from {current_version.prerelease} to {current_version.bump_prerelease(token="build").prerelease}")
+            current_version = current_version.bump_prerelease(token="build")
 
     return str(current_version)
 
@@ -55,7 +77,7 @@ def update_rp_manifest():
         manifest['header']['name'] = f"{ADDON_NAME} [RP v.{compilation_config['RP_VERSION']}]"
 
         # Increment build / set new version of the pack
-        current_rp_version = increment_manifest_pack_version(manifest, compilation_config['RP_VERSION'], IS_RELEASE)
+        current_rp_version = increment_manifest_pack_version(manifest, compilation_config['RP_VERSION'], parser.parse_args().is_release or IS_RELEASE)
         manifest['header']['version'] = current_rp_version
 
         # Set engine version
@@ -84,7 +106,7 @@ def update_bp_manifest():
         manifest['header']['name'] = f"{ADDON_NAME} [BP v.{BP_VERSION}]"
 
         # Increment build / set new version of the pack
-        current_bp_version = increment_manifest_pack_version(manifest, BP_VERSION, IS_RELEASE)
+        current_bp_version = increment_manifest_pack_version(manifest, BP_VERSION, parser.parse_args().is_release or IS_RELEASE)
         manifest['header']['version'] = current_bp_version
 
         # Set engine version
@@ -147,7 +169,8 @@ if __name__ == '__main__':
             bp_output = f"{ADDON_NAME} [BP v.{compilation_config['BP_VERSION']}].mcpack"
 
     else:
-        output = f"{ADDON_NAME} [v.{compilation_config['ADDON_VERSION']}].mcaddon"
+        # output = f"{ADDON_NAME} [v.{compilation_config['ADDON_VERSION']}].mcaddon"
+        output = f"{ADDON_NAME}.mcaddon"
 
         with zipfile.ZipFile(
             EXPORT_DIR / output,
