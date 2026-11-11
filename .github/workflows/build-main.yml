@@ -14,6 +14,8 @@ jobs:
 
       - uses: actions/setup-node@v7
 
+      - run: npm ci
+
       - name: Compile TypeScript files to JavaScript
         run: npm run compile
 
