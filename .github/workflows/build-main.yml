@@ -13,3 +13,4 @@ jobs:
         run: npm config get prefix
       - name: Compile TypeScript files to JavaScript
         run: npm run compile
+
