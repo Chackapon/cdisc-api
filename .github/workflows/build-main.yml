@@ -12,10 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
 
-      - run: npm ci
+      - name: Install NPM packages
+        run: npm ci
 
       - name: Compile TypeScript files to JavaScript
         run: npm run compile
+
+      - name: Package .mcaddon file
+        run: python3 package_addon.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: export
 
