@@ -1,5 +1,8 @@
 name: Build Addon from main branch
-on: ["push"]
+on:
+  push:
+    branches:
+      - master
 jobs:
   Build-Main-Branch:
     runs-on: ubuntu-latest
