@@ -21,6 +21,9 @@ jobs:
       - name: Compile TypeScript files to JavaScript
         run: npm run compile
 
+      - name: Install Python packages
+        run: pip3 install -r requirements.txt
+
       - name: Package .mcaddon file
         run: python3 package_addon.py
 
