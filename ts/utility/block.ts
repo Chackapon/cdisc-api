@@ -27,7 +27,7 @@ export function fromBlockID(id: string | undefined ) {
  * @param block
  */
 export function getNearbyPlayers( block: Block ) {
-    return world.getPlayers({
+    return block.dimension.getPlayers({
         location: block.location,
         maxDistance: 64 // TODO extract to a setting
     });
