@@ -38,7 +38,7 @@ import {
 
 import {
     getBlockID
-} from "./utility/block_id"
+} from "./utility/block"
 
 
 const playerInteractionCooldown = new Set<string>;

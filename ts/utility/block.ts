@@ -21,3 +21,14 @@ export function fromBlockID(id: string | undefined ) {
 
     return world.getDimension(dimensionId).getBlock({x,y,z})
 }
+
+/**
+ * Get instances of all players in a set radius from a block
+ * @param block
+ */
+export function getNearbyPlayers( block: Block ) {
+    return world.getPlayers({
+        location: block.location,
+        maxDistance: 64 // TODO extract to a setting
+    });
+}

@@ -1,6 +1,6 @@
 import {Block, system, world} from "@minecraft/server";
 import {hopperJukeboxRegistry, jukeboxRegistry} from "./registries";
-import {fromBlockID, getBlockID} from "./utility/block_id";
+import {fromBlockID, getBlockID} from "./utility/block";
 import {isBlockJukebox} from "./jukebox_handler";
 import {removeDisc, stopSongHandler} from "./disc_handler";
 import {ADDON_NAMESPACE, DEFAULT_HOPPER_POLLING_TIME, HOPPER_TAG, JUKEBOX_DATA_NAME} from "./default_const";
