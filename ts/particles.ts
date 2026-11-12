@@ -1,16 +1,18 @@
 import {RecordSong} from "./default_const";
 import {Block, MolangVariableMap, RGB, system, Vector3} from "@minecraft/server";
-import {Vector3Utils} from "@minecraft/math";
+// import {Vector3Utils} from "@minecraft/math";
 
+
+// TODO docuemtn
 const COLOR_GRADIENT_MAP = [
-    "#FF0000",
-    "#FF8100",
-    "#FFF800",
-    "#00FF04",
-    "#00FFFF",
-    "#0A00FF",
-    "#FE00FF",
-    "#FF0000"
+    "FF0000",
+    "FF8100",
+    "FFF800",
+    "00FF04",
+    "00FFFF",
+    "0A00FF",
+    "FE00FF",
+    "FF0000"
 ]
 
 /**
@@ -19,7 +21,7 @@ const COLOR_GRADIENT_MAP = [
  */
 function hexToVector( hex: string ): Vector3 {
     const extractColor = ( idx: number ) => {
-        return hex.substring(idx*2, idx*2 + 1);
+        return hex.substring(idx*2, idx*2 + 2);
     }
 
     return {
@@ -29,6 +31,20 @@ function hexToVector( hex: string ): Vector3 {
     }
 }
 
+// TODO document
+function lerp( a: number, b: number, t: number ) {
+    return t*b + (1-t)*a
+}
+
+// TODO document
+function interpolateColors(color_a: Vector3, color_b: Vector3, t: number) {
+    // return Vector3Utils.lerp(color_a, color_b, t);
+    return {
+        x: lerp(color_a.x, color_b.x, t),
+        y: lerp(color_a.y, color_b.y, t),
+        z: lerp(color_a.z, color_b.z, t),
+    }
+}
 
 /**
  * Interpolate a [0,1] value to a color
@@ -54,7 +70,10 @@ function interpolateColor( x: number ): RGB {
     const color_b = hexToVector( COLOR_GRADIENT_MAP[end_i] )
 
     // Interpolate color
-    const result = Vector3Utils.lerp(color_a, color_b, t)
+    const result = interpolateColors(color_a, color_b, t)
+
+    console.log(t)
+    console.log(JSON.stringify(result))
 
     // Convert Vector3 to color
     return {
@@ -87,7 +106,7 @@ function noteParticleTick(jukebox: Block, song: RecordSong) {
     // TODO add key color ranges
     const x = system.currentTick / 20
     const t = (Math.sin(x) + 1) / 2
-    molang_var_map.setColorRGB("variable.color", interpolateColor(t));
+    molang_var_map.setColorRGB("variable.note_color", interpolateColor(t));
 
     // Spawn particle
     jukebox.dimension.spawnParticle("minecraft:note_particle", {
@@ -97,10 +116,12 @@ function noteParticleTick(jukebox: Block, song: RecordSong) {
     }, molang_var_map);
 }
 
+
+// TODO document
 export function registerParticleTicker(song: RecordSong, jukebox: Block) {
 
     // Calculate particle spawning interval (can't be less than 1 tick
-    const particleInterval = Math.ceil((song.bpm ?? 60) / 3) || 1;
+    const particleInterval = Math.ceil((song.bpm ?? 60) / 3 / 4) || 1;
 
     // Play particle once and register particle spawner loop
     noteParticleTick(jukebox, song)
