@@ -6,8 +6,9 @@ import {
     RecordSong,
     RECORD_COMPONENT_NAME, RECORD_SIDE_DATA_NAME
 } from "./default_const";
-import {getBlockID} from "./utility/block_id";
+import {getBlockID, getNearbyPlayers} from "./utility/block";
 import {hopperJukeboxRegistry, jukeboxRegistry, soundInstanceRegistry} from "./registries";
+import {registerParticleTicker} from "./particles";
 
 /**
  * Checks if ItemStack is a CDisc disc item. Undefined items are treated as non discs
@@ -29,9 +30,9 @@ export function getDiscSideID(disc_item: ItemStack) {
 /**
  * Stops the game music
  */
-function playersStopMusic() {
-    for (const player of world.getAllPlayers()) {
-        player.stopMusic(); //TODO stop only for players that are near the jukebox
+function playersStopMusic( jukebox: Block ) {
+    for (const player of getNearbyPlayers(jukebox)) {
+        player.stopMusic();
     }
 }
 
@@ -206,10 +207,9 @@ export function stopSongHandler( jukebox: Block, isInterrupted = true ) {
 // TODO refactor and consider renaming to playSong
 export function playDisc( player: Player, jukebox: Block, song: RecordSong ): SoundInstance | undefined {
 
-    // TODO remove this
-    // playersStopMusic();
+    // Stop game music for every player
+    playersStopMusic( jukebox );
 
-    // let disc_lang_key = "record." + disc_item.typeId.split(":")[1]
 
     // TODO check if action bar is shown to only one player or all in a radius
     recordActionBar( player, song );
@@ -227,17 +227,9 @@ export function playDisc( player: Player, jukebox: Block, song: RecordSong ): So
     if (!sound_event) console.error( `Sould not play the sound "${song.sound}"` );
 
 
-    // TODO document and extrsct method
     // Register a note particle emitter
-    const particleInterval = Math.ceil((song.bpm ?? 60) / 3) || 1;
-    const particleTicker = system.runInterval( () => {
-        jukebox.dimension.spawnParticle("minecraft:note_particle", { // TODO add a custom particle that actually changes color
-            x: jukebox.location.x + 0.5,
-            y: jukebox.location.y + 1.2,
-            z: jukebox.location.z + 0.5
-        });
-    }, particleInterval );//TODO play once on disc load, extract particle method
-    
+    const particleTicker = registerParticleTicker(song, jukebox);
+
     // Add a callback handling song end
     const songEndHandler = system.runTimeout(() => stopSongHandler(jukebox,false), 20 * song.duration );
 
@@ -250,10 +242,7 @@ export function playDisc( player: Player, jukebox: Block, song: RecordSong ): So
     })
 
 
-
-
     return sound_event
-
 }
 
 /**
@@ -274,7 +263,11 @@ export function removeDisc( jukebox: Block ) {
 
     // Return the disc in item form
     const disc_item = new ItemStack( jukeboxEntry.disc_id, 1 );
-    disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, jukeboxEntry.song_id ?? 0); // TODO conflicts with the no dyn property handling of single sided discs
+    if (jukeboxEntry.song_id) {
+        disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, jukeboxEntry.song_id); // TODO conflicts with the no dyn property handling of single sided discs
+        //TODO  (check if this does the fix)
+    }
+
     return disc_item;
 }
 
