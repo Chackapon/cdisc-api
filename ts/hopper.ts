@@ -2,7 +2,7 @@ import {Block, system, world} from "@minecraft/server";
 import {hopperJukeboxRegistry, jukeboxRegistry} from "./registries";
 import {fromBlockID, getBlockID} from "./utility/block";
 import {isBlockJukebox} from "./jukebox_handler";
-import {removeDisc, stopSongHandler} from "./disc_handler";
+import {removeDisc, setDiscLore, stopSongHandler} from "./disc_handler";
 import {ADDON_NAMESPACE, DEFAULT_HOPPER_POLLING_TIME, HOPPER_TAG, JUKEBOX_DATA_NAME} from "./default_const";
 import {saveWorldData} from "./world_data_save";
 
@@ -25,14 +25,22 @@ function hopperEjecter( jukebox: Block | undefined ) {
     const hopper_block = jukebox.dimension.getBlock(under_juke_location);
     if (hopper_block?.typeId !== "minecraft:hopper" || hopper_block.hasTag(`${ADDON_NAMESPACE}:${HOPPER_TAG}`)) return;
 
+    // Check if hopper is blocked by redstone
+    if (hopper_block.permutation.getState("powered_bit")) return;
+
     // Get the hopper inventory
     const hopper_inv = hopper_block.getComponent("minecraft:inventory")?.container
     if (!hopper_inv) return;
+
+
 
     // If hopper has empty slots, eject the music disc there
     if(hopper_inv.emptySlotsCount > 0) {
 
         const disc_item = removeDisc(jukebox);
+        // TODO consider moving this inside removeDisc
+        if (disc_item) setDiscLore(disc_item)
+
         stopSongHandler(jukebox);
         if (!disc_item) return;
         hopper_inv.addItem(disc_item);
