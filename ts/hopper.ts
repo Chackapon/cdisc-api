@@ -1,10 +1,45 @@
 import {Block, system, world} from "@minecraft/server";
 import {hopperJukeboxRegistry, jukeboxRegistry} from "./registries";
 import {fromBlockID, getBlockID} from "./utility/block";
-import {isBlockJukebox} from "./jukebox_handler";
-import {removeDisc, setDiscLore, stopSongHandler} from "./disc_handler";
+import {isBlockJukebox, isJukeboxFull} from "./jukebox_handler";
+import {isMusicDisc, removeDisc, setDiscLore, stopSongHandler} from "./disc_handler";
 import {ADDON_NAMESPACE, DEFAULT_HOPPER_POLLING_TIME, HOPPER_TAG, JUKEBOX_DATA_NAME} from "./default_const";
 import {saveWorldData} from "./world_data_save";
+
+function getNeighborHoppers( block: Block ): Set<Block> {
+    const result = new Set<Block | undefined>()
+
+    if (block.east() && block.east()?.permutation.getState("facing_direction") == 4) result.add(block.east())
+    if (block.west()?.permutation.getState("facing_direction") == 5) result.add(block.east())
+    if (block.south()?.permutation.getState("facing_direction") == 2) result.add(block.east())
+    if (block.north()?.permutation.getState("facing_direction") == 3) result.add(block.east())
+    if (block.above()?.permutation.getState("facing_direction") == 0) result.add(block.east())
+
+    return new Set<Block>([...result].filter( block => block !== undefined) )
+}
+
+function hopperInjector( jukebox: Block | undefined ) {
+    if (!jukebox || !isBlockJukebox(jukebox)) return;
+    if (isJukeboxFull(jukebox)) return;
+
+    getNeighborHoppers( jukebox ).forEach( hopper => {
+        // check if hopper is in cooldown, possibly get it into cooldown after operation and cancel other item's transport
+        // lock hoppers around jukebox when disc starts playing. unlock them on disc eject, end or block break
+        const container = hopper.getComponent("minecraft:inventory")?.container
+        if (!container) return; //break
+
+        const first_occupied_slot = container.firstItem()
+        if (!first_occupied_slot) return;
+
+        const first_item = container.getItem(first_occupied_slot)
+        if (!first_item) return;
+
+        if (!isMusicDisc(first_item)) return;
+
+        console.log(`Polled hopper ${getBlockID(hopper)}`)
+        console.log(`Ready to transport item ${first_item.typeId} at slot ${first_occupied_slot}`)
+    })
+}
 
 //8 tick polling speed by default
 /**
@@ -12,17 +47,12 @@ import {saveWorldData} from "./world_data_save";
  * @param jukebox
  */
 // TODO finish documentation
-function hopperEjecter( jukebox: Block | undefined ) {
+function hopperEjector( jukebox: Block | undefined ) {
     if (!jukebox || !isBlockJukebox(jukebox)) return;
     const jukeboxID = getBlockID(jukebox);
 
     // Get the hopper block instance
-    const under_juke_location = {
-        x: jukebox.location.x,
-        y: jukebox.location.y - 1,
-        z: jukebox.location.z
-    }
-    const hopper_block = jukebox.dimension.getBlock(under_juke_location);
+    const hopper_block = jukebox.below()
     if (hopper_block?.typeId !== "minecraft:hopper" || hopper_block.hasTag(`${ADDON_NAMESPACE}:${HOPPER_TAG}`)) return;
 
     // Check if hopper is blocked by redstone
@@ -67,7 +97,8 @@ export function registerHopperPolling() {
     // Regular hopper polling
     system.runInterval(() => {
         hopperJukeboxRegistry.forEach((jukeboxID) => {
-            hopperEjecter(fromBlockID(jukeboxID));
+            hopperEjector(fromBlockID(jukeboxID));
+            hopperInjector(fromBlockID(jukeboxID));
         })
     }, DEFAULT_HOPPER_POLLING_TIME*10);
 }
