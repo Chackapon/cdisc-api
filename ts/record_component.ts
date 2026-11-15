@@ -41,12 +41,7 @@ import {hopperInjector} from "./hopper";
 const playerInteractionCooldown = new Set<string>;
 
 
-// TODO document
-// TODO if returns undefined then it was a single disc
-function nextSong(disc_item: ItemStack) {
-
-    if (!disc_item) return;
-
+function isMultiDisc( disc_item: ItemStack ) {
     const properties: any = disc_item.getComponent("cdisc:record")?.customComponentParameters.params;
     if (!properties) return;
 
@@ -56,6 +51,20 @@ function nextSong(disc_item: ItemStack) {
         return;
     }
 
+    return properties["songs"];
+}
+
+/**
+ * Returns the CDisc item with the next song selected. Returns 0 if provided item was not a multi disc
+ * @param disc_item
+ */
+function nextSong(disc_item: ItemStack) {
+
+    // Retrieve the list of song entry keys
+    if (!disc_item) return;
+    const songs_list = isMultiDisc(disc_item);
+    if (!songs_list) return;
+
     // Get current side of the disc item
     let song_id = getDiscSideID(disc_item);
 
@@ -63,6 +72,7 @@ function nextSong(disc_item: ItemStack) {
     song_id = (song_id + 1) % songs_list.length;
     disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, song_id);
     setDiscLore(disc_item);
+
     return disc_item;
 }
 
@@ -93,13 +103,16 @@ export function registerRecordComponent() {
                 if (inventory) {
 
                     // Try to change to next side
-                    const new_disc = nextSong(disc_item) ?? disc_item;
-                    inventory.setItem(event.source.selectedSlotIndex, new_disc);
+                    const new_disc = nextSong(disc_item);
+                    if (!new_disc) return;
 
                     // Visual side flipping
                     event.source.playSound("game.player.attack.strong");
                     // event.source.playAnimation();
                     event.source.onScreenDisplay.setActionBar("Flipped the disc side")
+                    inventory.setItem(event.source.selectedSlotIndex, new_disc);
+
+
                     // event.source.onScreenDisplay.setActionBar({
                     //     rawtext: [
                     //         { translate: "cdisc.disc_flipped"}
@@ -136,11 +149,6 @@ export function registerRecordComponent() {
                 playerInteractionCooldown.delete(player.id);
             }, DEFAULT_JUKEBOX_INTERACTION_COOLDOWN);
         }
-
-
-        // console.log(`Is jukebox clicked: ${jukebox.typeId}, ${isBlockJukebox(jukebox)}`)
-
-        const jukeboxID = getBlockID(jukebox);
 
 
         // Jukebox doesn't have a CDisc yet
