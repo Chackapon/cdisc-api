@@ -85,8 +85,8 @@ function interpolateColor( x: number ): RGB {
     // Interpolate color
     const result = interpolateColors(color_a, color_b, t)
 
-    console.log(COLOR_GRADIENT_MAP[start_i], t, COLOR_GRADIENT_MAP[end_i])
-    console.log(JSON.stringify(result))
+    // console.log(COLOR_GRADIENT_MAP[start_i], t, COLOR_GRADIENT_MAP[end_i])
+    // console.log(JSON.stringify(result))
 
     // Convert Vector3 to color
     return {
@@ -113,7 +113,7 @@ function noteParticleTick(jukebox: Block, song: RecordSong) {
     switch (song.author) {
         case "Bułgar":
         case "bulgar":
-            console.log("Easter egg particle Bułgar")
+            // console.log("Easter egg particle Bułgar")
             break
         default:
             break
@@ -121,7 +121,7 @@ function noteParticleTick(jukebox: Block, song: RecordSong) {
 
     // const x = system.currentTick * (song.bpm ?? 60) * color_delta / 20
     const x = Math.floor(system.currentTick / particleInterval)
-    console.log(`y = ${x} * ${color_delta} = ${x*color_delta}`)
+    // console.log(`y = ${x} * ${color_delta} = ${x*color_delta}`)
     const y = x * color_delta //(1 - Math.cos(x)) / 2
 
     // TODO add key color ranges

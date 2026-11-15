@@ -1,5 +1,4 @@
 import {
-    JUKEBOX_DATA_NAME,
     ADDON_NAMESPACE,
     MAX_JUKEBOX_INTERACT_DISTANCE,
 
@@ -9,24 +8,21 @@ import {
 
 import {
     jukeboxRegistry,
-    soundInstanceRegistry
 } from "./registries";
 
 // Dynamic world data handler library
 import {
-    loadWorldData,
-    saveWorldData
+    loadWorldData
 } from './world_data_save.js';
 
 import {
-    GameMode,
+    GameMode, ItemStack,
     system, world
 } from "@minecraft/server";
 
 import {
     playDisc,
     ejectDisc,
-    getSong,
     setDiscLore,
     isMusicDisc,
     getDiscSideID
@@ -39,9 +35,36 @@ import {
 import {
     getBlockID
 } from "./utility/block"
+import {hopperInjector} from "./hopper";
 
 
 const playerInteractionCooldown = new Set<string>;
+
+
+// TODO document
+// TODO if returns undefined then it was a single disc
+function nextSong(disc_item: ItemStack) {
+
+    if (!disc_item) return;
+
+    const properties: any = disc_item.getComponent("cdisc:record")?.customComponentParameters.params;
+    if (!properties) return;
+
+    // Continue only if multi disc
+    const songs_list: string[] = properties["songs"];
+    if (!songs_list || !Array.isArray(songs_list) || songs_list.length <= 1) {
+        return;
+    }
+
+    // Get current side of the disc item
+    let song_id = getDiscSideID(disc_item);
+
+    // Set the new side
+    song_id = (song_id + 1) % songs_list.length;
+    disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, song_id);
+    setDiscLore(disc_item);
+    return disc_item;
+}
 
 export function registerRecordComponent() {
 
@@ -50,7 +73,7 @@ export function registerRecordComponent() {
         itemComponentRegistry.registerCustomComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`, {
 
             // Change disc side
-            onUse(event, params) {
+            onUse(event) {
 
                 // Ignore if trying to interact with a jukebox
                 const looking_block = event.source.getBlockFromViewDirection(
@@ -64,36 +87,24 @@ export function registerRecordComponent() {
                 const disc_item = event.itemStack;
                 if (!disc_item) return;
 
-                const properties: any = params.params;
-                if (!properties) return;
-
-                // Continue only if multi disc
-                const songs_list: string[] = properties["songs"];
-                if (!songs_list || !Array.isArray(songs_list) || songs_list.length <= 1) {
-                    return;
-                }
-
-                // Get current side of the disc item
-                let song_id = getDiscSideID(disc_item);
-
+                // Get player's inventory
                 const inventory = event.source.getComponent("minecraft:inventory")?.container;
 
                 if (inventory) {
 
-                    // Set the new side
-                    song_id = (song_id + 1) % songs_list.length;
-                    disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, song_id);
-                    setDiscLore(disc_item);
-                    inventory.setItem(event.source.selectedSlotIndex, disc_item);
+                    // Try to change to next side
+                    const new_disc = nextSong(disc_item) ?? disc_item;
+                    inventory.setItem(event.source.selectedSlotIndex, new_disc);
 
                     // Visual side flipping
                     event.source.playSound("game.player.attack.strong");
                     // event.source.playAnimation();
-                    event.source.onScreenDisplay.setActionBar({
-                        rawtext: [
-                            { translate: "cdisc.disc_flipped"}
-                        ]
-                    });
+                    event.source.onScreenDisplay.setActionBar("Flipped the disc side")
+                    // event.source.onScreenDisplay.setActionBar({
+                    //     rawtext: [
+                    //         { translate: "cdisc.disc_flipped"}
+                    //     ]
+                    // });
                 }
 
             },
@@ -104,6 +115,9 @@ export function registerRecordComponent() {
 
     // TODO refactor and document
     world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
+
+        // Cancel interaction fully if player is sneaking
+        if ( event.player.isSneaking ) return;
 
         const jukebox = event.block;
         if ( !isBlockJukebox(jukebox) ) return;
@@ -147,33 +161,20 @@ export function registerRecordComponent() {
                 })
             }
 
-            // Get the song record
-            const song = getSong(disc_item);
-
-            // Play the sound
+            // Play the disc
             system.run(()=> {
-                playDisc( player, jukebox, song);
+                playDisc( jukebox, disc_item);
             });
 
 
-            // Add the inserted disc to the registry
-            // console.log(`Reached adding the registry, current size ${jukeboxRegistry.size}`)
-            jukeboxRegistry.set(jukeboxID, {
-                disc_id: disc_item.typeId,
-                song_id: disc_item.getDynamicProperty(`${RECORD_SIDE_DATA_NAME}`) as number,
-            }); // TODO consider saving disc side as well
-            // console.log(`after adding ${jukeboxID} size is now ${jukeboxRegistry.size}`);
         }
-        else { // todo: this must work regardless of item used
+        else {
             event.cancel = true
             system.run(()=>{
                 ejectDisc(jukebox);
+                hopperInjector(jukebox);
             })
         }
 
-        // TODO consider moving somewhere else
-        // Save updated jukebox contents registry
-        saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
-        // player.sendMessage(`registry size: ${jukeboxRegistry.size}`);
     })
 }

@@ -68,11 +68,14 @@ settings.header( "Gameplay" )
 settings.toggle( `${ADDON_NAMESPACE}:consume_creative`, "Consume music discs even in creative mode")
 settings.textField( `${ADDON_NAMESPACE}:jukebox_reach`, "Use distance for jukeboxes" )
 
-
-
-// Tick all playing songs every second
-// TODO remove duration ticking, just on song end stop particle, send to lower hopper, check side and top hoppers (possibly unlock them when there was a previous lock)
-
-
-// Play note particle
-// TODO custom looping particle with tempo info launched in playDisc and ended by song end/block break
+// TODO temporary
+world.afterEvents.playerInteractWithBlock.subscribe((event)=>{
+	if (event.itemStack?.typeId === "minecraft:brush" && event.block.typeId==="minecraft:jukebox") {
+		if (!event.player.isSneaking) return;
+		event.block.getComponent("minecraft:record_player")?.setRecord("cdisc:disc_power_15", false)
+		console.log("world dyn prop ids:", world.getDynamicPropertyIds())
+		world.getDynamicPropertyIds().forEach(propertyId=>{
+			console.log(`@ ${propertyId} (type ${typeof world.getDynamicProperty(propertyId)})`, JSON.stringify(world.getDynamicProperty(propertyId)));
+		})
+	}
+})

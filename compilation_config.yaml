@@ -1,7 +1,7 @@
 ADDON_NAME: "CDisc API"
 ADDON_DESCRIPTION: "Add vanilla-like custom music discs with just one custom item component!"
 
-IS_RELEASE: true
+IS_RELEASE: false
 RP_VERSION: "1.2.9"
 BP_VERSION: "1.2.10"
 ADDON_VERSION: "1.1"
