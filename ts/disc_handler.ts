@@ -15,7 +15,7 @@ import {saveWorldData} from "./world_data_save";
  * Checks if ItemStack is a CDisc disc item. Undefined items are treated as non discs
  * @param item
  */
-export function isMusicDisc( item: ItemStack | undefined ) {
+export function isCDisc(item: ItemStack | undefined ) {
     return item?.getComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`) ?? false;
 }
 
@@ -121,7 +121,7 @@ export function subscribeEventInventoryChangeLore() {
     world.afterEvents.playerInventoryItemChange.subscribe((event)=> {
         system.run(()=>{ // for some reason setDiscLore hangs here on worldload when hopper ejects
             const disc_item = event.itemStack;
-            if (!disc_item || !isMusicDisc(disc_item)) return;
+            if (!disc_item || !isCDisc(disc_item)) return;
 
             const inventory = event.player.getComponent("minecraft:inventory")?.container;
             if (!inventory) return;
@@ -144,7 +144,7 @@ export function subscribeEventItemEntityLore() {
         if (!itemComponent) return;
 
         const oldItem = itemComponent.itemStack;
-        if (!isMusicDisc(oldItem)) return;
+        if (!isCDisc(oldItem)) return;
 
         // Already has lore
         if (oldItem.getLore().length > 0) return;

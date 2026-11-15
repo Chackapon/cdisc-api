@@ -2,7 +2,7 @@ import {Block, system, world} from "@minecraft/server";
 import {hopperJukeboxRegistry, jukeboxRegistry} from "./registries";
 import {fromBlockID, getBlockID} from "./utility/block";
 import {isBlockJukebox} from "./jukebox_handler";
-import {isMusicDisc, playDisc, removeDisc, setDiscLore, stopSongHandler} from "./disc_handler";
+import {isCDisc, playDisc, removeDisc, setDiscLore, stopSongHandler} from "./disc_handler";
 import {
     ADDON_NAMESPACE,
     DEFAULT_HOPPER_POLLING_TIME,
@@ -49,7 +49,7 @@ export function hopperInjector( jukebox: Block | undefined ) {
         if (first_occupied_slot === undefined) continue;
         const first_item = container.getItem(first_occupied_slot)
         if (!first_item) continue;
-        if (!isMusicDisc(first_item)) continue;
+        if (!isCDisc(first_item)) continue;
 
         // Remove the disc from the hopper
         container.setItem(first_occupied_slot, undefined)
