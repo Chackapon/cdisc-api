@@ -8,7 +8,7 @@ import {
     JUKEBOX_COMPONENT_NAME, JukeboxEntry, RECORD_SIDE_DATA_NAME,
 } from "./default_const";
 import {jukeboxRegistry} from "./registries";
-import {getBlockID} from "./utility/block_id";
+import {getBlockID} from "./utility/block";
 import {removeDisc, stopSongHandler} from "./disc_handler";
 
 

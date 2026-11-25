@@ -4,16 +4,18 @@ import {
     ADDON_NAMESPACE,
 
     RecordSong,
-    RECORD_COMPONENT_NAME, RECORD_SIDE_DATA_NAME
+    RECORD_COMPONENT_NAME, RECORD_SIDE_DATA_NAME, JUKEBOX_DATA_NAME
 } from "./default_const";
-import {getBlockID} from "./utility/block_id";
+import {getBlockID, getNearbyPlayers} from "./utility/block";
 import {hopperJukeboxRegistry, jukeboxRegistry, soundInstanceRegistry} from "./registries";
+import {registerParticleTicker} from "./particles";
+import {saveWorldData} from "./world_data_save";
 
 /**
  * Checks if ItemStack is a CDisc disc item. Undefined items are treated as non discs
  * @param item
  */
-export function isMusicDisc( item: ItemStack | undefined ) {
+export function isCDisc(item: ItemStack | undefined ) {
     return item?.getComponent(`${ADDON_NAMESPACE}:${RECORD_COMPONENT_NAME}`) ?? false;
 }
 
@@ -29,19 +31,19 @@ export function getDiscSideID(disc_item: ItemStack) {
 /**
  * Stops the game music
  */
-function playersStopMusic() {
-    for (const player of world.getAllPlayers()) {
-        player.stopMusic(); //TODO stop only for players that are near the jukebox
+function playersStopMusic( jukebox: Block ) {
+    for (const player of getNearbyPlayers(jukebox)) {
+        player.stopMusic();
     }
 }
 
 
 /**
  * Displays an action bar text with the song being player
- * @param player
+ * @param players
  * @param song
  */
-function recordActionBar( player: Player, song: RecordSong ) {
+function recordActionBar( players: Player[], song: RecordSong ) {
     /*player.sendMessage(`§eArtist: ${temp[0]}`);
     player.sendMessage(`§eSong: ${temp[1]}`);
     player.sendMessage( {
@@ -56,26 +58,28 @@ function recordActionBar( player: Player, song: RecordSong ) {
         ]
     } )*/
 
-    if (song) {
-        player.onScreenDisplay.setActionBar({
-            rawtext: [
-                {
-                    translate: `record.nowPlaying`,
-                    with: [` ${song.author ?? "Unknown"} - ${song.title ?? "Untitled"}`]
-                }
-            ]
-        });
-    }
-    else {
-        player.onScreenDisplay.setActionBar({
-            rawtext: [
-                {
-                    // TODO add this text to localization
-                    translate: `cdisc.songNotFound`,
-                }
-            ]
-        })
-    }
+    players.forEach( player => {
+
+        if (song) {
+            player.onScreenDisplay.setActionBar({
+                rawtext: [
+                    {
+                        translate: `record.nowPlaying`,
+                        with: [`${song.author ?? "Unknown"} - ${song.title ?? "Untitled"}`]
+                    }
+                ]
+            });
+        } else {
+            player.onScreenDisplay.setActionBar({
+                rawtext: [
+                    {
+                        // TODO add this text to localization
+                        translate: `cdisc.songNotFound`,
+                    }
+                ]
+            })
+        }
+    })
 
 
     /*
@@ -115,14 +119,17 @@ function recordActionBar( player: Player, song: RecordSong ) {
 // TODO document
 export function subscribeEventInventoryChangeLore() {
     world.afterEvents.playerInventoryItemChange.subscribe((event)=> {
-        const disc_item = event.itemStack;
-        if (!disc_item || !isMusicDisc(disc_item)) return;
+        system.run(()=>{ // for some reason setDiscLore hangs here on worldload when hopper ejects
+            const disc_item = event.itemStack;
+            if (!disc_item || !isCDisc(disc_item)) return;
+            if ( disc_item.getLore().length !== 0 ) return;
 
-        const inventory = event.player.getComponent("minecraft:inventory")?.container;
-        if (!inventory) return;
+            const inventory = event.player.getComponent("minecraft:inventory")?.container;
+            if (!inventory) return;
 
-        setDiscLore(disc_item);
-        inventory.setItem(event.slot, disc_item);
+            setDiscLore(disc_item);
+            inventory.setItem(event.slot, disc_item);
+        })
     })
 }
 
@@ -138,7 +145,7 @@ export function subscribeEventItemEntityLore() {
         if (!itemComponent) return;
 
         const oldItem = itemComponent.itemStack;
-        if (!isMusicDisc(oldItem)) return;
+        if (!isCDisc(oldItem)) return;
 
         // Already has lore
         if (oldItem.getLore().length > 0) return;
@@ -168,7 +175,7 @@ export function setDiscLore( disc_item: ItemStack ) {
             { text: `${author} - ${title}` }
             // { translate: disc_lang_key }
         ]}]);
-} //todo: fix this
+}
 
 // TODO document
 /**
@@ -188,7 +195,7 @@ export function stopSongHandler( jukebox: Block, isInterrupted = true ) {
         system.clearRun( sound_entry?.songEnder );
 
         // Stop the sound
-        sound_entry.sound.stop()
+        sound_entry.sound?.stop()
 
         // Kill the note particle generator
         const particleEmitterID = sound_entry.particleEmitter;
@@ -197,50 +204,62 @@ export function stopSongHandler( jukebox: Block, isInterrupted = true ) {
     }
 
     //todo stop redstone
-    //todo hopper inject
+    //todo consider moving into removeDisc
     if (!isInterrupted) {
         hopperJukeboxRegistry.add(getBlockID(jukebox));
     }
 }
 
+
+/**
+ * Registers the jukebox block and the disc item into the active CDsic registry
+ * @param jukebox
+ * @param disc_item
+ */
+function registerJukebox(jukebox: Block, disc_item: ItemStack) {
+    jukeboxRegistry.set(getBlockID(jukebox), {
+        disc_id: disc_item.typeId,
+        song_id: disc_item.getDynamicProperty(`${RECORD_SIDE_DATA_NAME}`) as number,
+    });
+}
+
 // TODO refactor and consider renaming to playSong
-export function playDisc( player: Player, jukebox: Block, song: RecordSong ): SoundInstance | undefined {
+export function playDisc( jukebox: Block, disc_item: ItemStack ): SoundInstance | undefined {
 
-    // TODO remove this
-    // playersStopMusic();
+    // Stop game music for every player
+    playersStopMusic( jukebox );
 
-    // let disc_lang_key = "record." + disc_item.typeId.split(":")[1]
+    // Retrieve the song metadata
+    const song = getSong(disc_item);
 
     // TODO check if action bar is shown to only one player or all in a radius
-    recordActionBar( player, song );
-
+    recordActionBar( getNearbyPlayers(jukebox), song );
 
     // Play the song sound
-    const sound_event = jukebox.dimension.playSound(
-        song.sound,
-        jukebox.location,
-        {
-            volume: 64,
-            isBroadcast: true
+    console.log(`playing sound ${song.sound}`)
+    let sound_event = undefined;
+    try {
+         sound_event = jukebox.dimension.playSound(
+            song.sound,
+            jukebox.location,
+            {
+                volume: 64,
+                isBroadcast: true
+            }
+        );
+        if (!sound_event) {
+            console.error(`Could not play sound "${song.sound}"`)
+            return undefined
         }
-    );
-    if (!sound_event) console.error( `Sould not play the sound "${song.sound}"` );
+    } catch ( InvalidArgumentError ) {
+        console.error(`The sound for this disc is undefined`)
+    }
 
-
-    // TODO document and extrsct method
     // Register a note particle emitter
-    const particleInterval = Math.ceil((song.bpm ?? 60) / 3) || 1;
-    const particleTicker = system.runInterval( () => {
-        jukebox.dimension.spawnParticle("minecraft:note_particle", { // TODO add a custom particle that actually changes color
-            x: jukebox.location.x + 0.5,
-            y: jukebox.location.y + 1.2,
-            z: jukebox.location.z + 0.5
-        });
-    }, particleInterval );//TODO play once on disc load, extract particle method
-    
+    const particleTicker = registerParticleTicker(song, jukebox);
+
     // Add a callback handling song end
     const songEndHandler = system.runTimeout(() => stopSongHandler(jukebox,false), 20 * song.duration );
-
 
     // Enter the SoundEntry using the played sound and created particle generator
     soundInstanceRegistry.set(getBlockID(jukebox), {
@@ -249,11 +268,18 @@ export function playDisc( player: Player, jukebox: Block, song: RecordSong ): So
         sound: sound_event
     })
 
+    // TODO redstone level setter. limit in duration time max 86399. handle with a ticker
+    const redstone_level = 3;
+    const redstone_disc_id = "cdisc:disc_power_15"
+    // jukebox.getComponent("minecraft:record_player")?.setRecord( redstone_disc_id, false )
 
+    // Register jukebox
+    registerJukebox(jukebox, disc_item);
 
+    // Save updated jukebox contents registry
+    saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
 
     return sound_event
-
 }
 
 /**
@@ -270,11 +296,18 @@ export function removeDisc( jukebox: Block ) {
 
     if (!jukeboxEntry) return;
 
-
+    // TODO redstone level remover
+    // jukebox.getComponent("minecraft:record_player")?.setRecord("minecraft:air")
 
     // Return the disc in item form
     const disc_item = new ItemStack( jukeboxEntry.disc_id, 1 );
-    disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, jukeboxEntry.song_id ?? 0); // TODO conflicts with the no dyn property handling of single sided discs
+    if (jukeboxEntry.song_id) {
+        disc_item.setDynamicProperty(`${RECORD_SIDE_DATA_NAME}`, jukeboxEntry.song_id);
+    }
+
+    // Save updated jukebox contents registry
+    saveWorldData( `${ADDON_NAMESPACE}:${JUKEBOX_DATA_NAME}`, jukeboxRegistry );
+
     return disc_item;
 }
 

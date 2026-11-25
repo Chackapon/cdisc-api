@@ -31,7 +31,7 @@ export type JukeboxEntry = {
 };
 
 export type SoundEntry = {
-    sound: SoundInstance;
+    sound: SoundInstance | undefined;
     particleEmitter: number
     songEnder: number
 }
