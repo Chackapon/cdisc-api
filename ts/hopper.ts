@@ -110,16 +110,15 @@ function hopperEjector( jukebox: Block | undefined ) {
         if (!disc_item) return;
 
         // TODO consider moving this inside removeDisc
-        system.run(()=>{ // sems to not fix the hang on world load if a jukebox was playing
-            setDiscLore(disc_item)
-        });
+        setDiscLore(disc_item)
 
         // Properly handle song stopping
         // TODO might not be necessary
         stopSongHandler(jukebox);
 
         // Insert the disc into the hopper
-        hopper_inv.addItem(disc_item);
+        const empty_slot = hopper_inv.firstEmptySlot();
+        hopper_inv.setItem( empty_slot!, disc_item );
 
         // TODO might be necessary only in injector
         // hopperJukeboxRegistry.delete(jukeboxID);

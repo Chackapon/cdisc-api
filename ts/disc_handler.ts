@@ -122,6 +122,7 @@ export function subscribeEventInventoryChangeLore() {
         system.run(()=>{ // for some reason setDiscLore hangs here on worldload when hopper ejects
             const disc_item = event.itemStack;
             if (!disc_item || !isCDisc(disc_item)) return;
+            if ( disc_item.getLore().length !== 0 ) return;
 
             const inventory = event.player.getComponent("minecraft:inventory")?.container;
             if (!inventory) return;
@@ -174,7 +175,7 @@ export function setDiscLore( disc_item: ItemStack ) {
             { text: `${author} - ${title}` }
             // { translate: disc_lang_key }
         ]}]);
-} //todo: fix this
+}
 
 // TODO document
 /**

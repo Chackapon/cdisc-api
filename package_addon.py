@@ -10,10 +10,12 @@ import yaml
 
 compilation_config = yaml.load( open("compilation_config.yaml", 'r'), yaml.SafeLoader )
 ADDON_NAME = compilation_config['ADDON_NAME']
+ADDON_DESCRIPTION = compilation_config['ADDON_DESCRIPTION']
+ADDON_VERSION = compilation_config['ADDON_VERSION']
 
-# RP_VERSION = compilation_config['RP_VERSION']
-# RP_UUID = compilation_config['RP_UUID']
 
+
+RP_VERSION = compilation_config['RP_VERSION']
 BP_VERSION = compilation_config['BP_VERSION']
 
 ENGINE_VER = compilation_config['MIN_ENGINE_VERSION']
@@ -74,7 +76,8 @@ def update_rp_manifest():
 
 
         # Set name with version
-        manifest['header']['name'] = f"{ADDON_NAME} [RP v.{compilation_config['RP_VERSION']}]"
+        manifest['header']['name'] = f"{ADDON_NAME} [v.{ADDON_VERSION}]"
+        manifest['header']['description'] = f"{ADDON_DESCRIPTION} [RP v.{RP_VERSION}]"
 
         # Increment build / set new version of the pack
         current_rp_version = increment_manifest_pack_version(manifest, compilation_config['RP_VERSION'], parser.parse_args().is_release or IS_RELEASE)
@@ -103,7 +106,8 @@ def update_bp_manifest():
 
 
         # Set name with version
-        manifest['header']['name'] = f"{ADDON_NAME} [BP v.{BP_VERSION}]"
+        manifest['header']['name'] = f"{ADDON_NAME} [v.{ADDON_VERSION}]"
+        manifest['header']['description'] = f"{ADDON_DESCRIPTION} [BP v.{BP_VERSION}]"
 
         # Increment build / set new version of the pack
         current_bp_version = increment_manifest_pack_version(manifest, BP_VERSION, parser.parse_args().is_release or IS_RELEASE)
